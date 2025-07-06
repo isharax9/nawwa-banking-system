@@ -14,6 +14,14 @@
     <name>banking-system-web</name>
 
     <dependencies>
+
+        <dependency>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
+            <version>3.1.0</version> <!-- Use 3.x for Jakarta EE 10, 2.x for Jakarta EE 9/Java EE 8 -->
+            <scope>provided</scope>
+        </dependency>
+
         <!-- Jakarta EE Web API -->
         <dependency>
             <groupId>jakarta.platform</groupId>
