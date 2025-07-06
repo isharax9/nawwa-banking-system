@@ -1,13 +1,11 @@
 package lk.banking.services;
 
 import jakarta.ejb.Stateless;
-import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lk.banking.core.dto.AccountDto;
 import lk.banking.core.entity.Account;
 import lk.banking.core.entity.Customer;
-import lk.banking.core.entity.enums.AccountType;
 import lk.banking.core.exception.AccountNotFoundException;
 
 import java.math.BigDecimal;
@@ -73,5 +71,10 @@ public class AccountServiceImpl implements AccountService {
         Account account = em.find(Account.class, id);
         if (account == null) throw new AccountNotFoundException("Account not found");
         em.remove(account);
+    }
+
+    @Override
+    public List<Account> findAccountsByUserId(Long id) {
+        return List.of();
     }
 }

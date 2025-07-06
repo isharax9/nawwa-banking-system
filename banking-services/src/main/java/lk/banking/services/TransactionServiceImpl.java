@@ -9,10 +9,11 @@ import lk.banking.core.entity.Transaction;
 import lk.banking.core.entity.enums.TransactionStatus;
 import lk.banking.core.exception.AccountNotFoundException;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Stateless
-public class TransactionServiceImpl implements TransactionService {
+public abstract class TransactionServiceImpl implements TransactionServices {
     @PersistenceContext(unitName = "bankingPU")
     private EntityManager em;
 
@@ -49,5 +50,10 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public List<Transaction> getAllTransactions() {
         return em.createQuery("SELECT t FROM Transaction t", Transaction.class).getResultList();
+    }
+
+    @Override
+    public boolean transferFunds(Long id, String fromAccount, String toAccount, BigDecimal amount) {
+        return false;
     }
 }
