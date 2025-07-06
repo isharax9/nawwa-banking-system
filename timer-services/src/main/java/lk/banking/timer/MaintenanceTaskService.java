@@ -7,11 +7,10 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lk.banking.core.entity.Account;
-import lk.banking.core.entity.Transaction;
 import lk.banking.core.entity.ScheduledTransfer;
+import lk.banking.core.entity.Transaction;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Singleton
@@ -24,7 +23,7 @@ public class MaintenanceTaskService {
     /**
      * Run weekly on Sunday at 4am
      */
-    @Schedule(dayOfWeek = "Sun", hour = "4", minute = "0", second = "0", persistent = false)
+    @Schedule(dayOfWeek = "Sun", hour = "4", persistent = false)
     @Transactional
     public void runMaintenance() {
         System.out.println("[Maintenance] Weekly maintenance started at " + LocalDateTime.now());
@@ -40,7 +39,7 @@ public class MaintenanceTaskService {
      * Archive transactions older than 1 year (mark as archived in DB, or optionally move to archive table).
      */
     private void archiveOldTransactions() {
-        LocalDateTime oneYearAgo = LocalDateTime.now().minus(1, ChronoUnit.YEARS);
+        LocalDateTime oneYearAgo = LocalDateTime.now().minusYears(1);
         List<Transaction> oldTransactions = em.createQuery(
                         "SELECT t FROM Transaction t WHERE t.timestamp < :cutoff", Transaction.class)
                 .setParameter("cutoff", oneYearAgo)
@@ -60,7 +59,7 @@ public class MaintenanceTaskService {
      * Clean up scheduled transfers that have been processed and are older than 30 days.
      */
     private void cleanUpOldScheduledTransfers() {
-        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minus(30, ChronoUnit.DAYS);
+        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
         List<ScheduledTransfer> oldTransfers = em.createQuery(
                         "SELECT s FROM ScheduledTransfer s WHERE s.processed = true AND s.scheduledTime < :cutoff", ScheduledTransfer.class)
                 .setParameter("cutoff", thirtyDaysAgo)
@@ -78,7 +77,7 @@ public class MaintenanceTaskService {
      * Detect and log inactive accounts (no transactions in over 6 months).
      */
     private void detectInactiveAccounts() {
-        LocalDateTime sixMonthsAgo = LocalDateTime.now().minus(6, ChronoUnit.MONTHS);
+        LocalDateTime sixMonthsAgo = LocalDateTime.now().minusMonths(6);
         List<Account> inactiveAccounts = em.createQuery(
                         "SELECT a FROM Account a WHERE a.id NOT IN (" +
                                 "SELECT DISTINCT t.account.id FROM Transaction t WHERE t.timestamp > :cutoff" +

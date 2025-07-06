@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <persistence xmlns="https://jakarta.ee/xml/ns/persistence" version="3.0">
-    <persistence-unit name="AppPU" transaction-type="JTA">
+    <persistence-unit name="bankingPU" transaction-type="JTA">
         <jta-data-source>banking_system</jta-data-source>
         <class>lk.banking.core.entity.Customer</class>
         <class>lk.banking.core.entity.Account</class>
