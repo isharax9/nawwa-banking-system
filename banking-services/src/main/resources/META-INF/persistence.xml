@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence" version="3.0">
+    <persistence-unit name="AppPU" transaction-type="JTA">
+        <jta-data-source>banking_system</jta-data-source>
+        <class>lk.banking.core.entity.Customer</class>
+        <class>lk.banking.core.entity.Account</class>
+        <class>lk.banking.core.entity.Transaction</class>
+        <class>lk.banking.core.entity.ScheduledTransfer</class>
+        <class>lk.banking.core.entity.User</class>
+        <class>lk.banking.core.entity.Role</class>
+        <properties>
+            <property name="jakarta.persistence.schema-generation.database.action" value="create"/>
+        </properties>
+    </persistence-unit>
+</persistence>

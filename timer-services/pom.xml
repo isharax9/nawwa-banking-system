@@ -35,6 +35,12 @@
             <artifactId>resend-java</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>lk.banking.app</groupId>
+            <artifactId>transaction-services</artifactId>
+            <version>1.0</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
