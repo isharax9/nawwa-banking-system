@@ -46,12 +46,6 @@
         </dependency>
         <dependency>
             <groupId>lk.banking.app</groupId>
-            <artifactId>notification-services</artifactId>
-            <version>1.0</version>
-            <type>ejb</type>
-        </dependency>
-        <dependency>
-            <groupId>lk.banking.app</groupId>
             <artifactId>web</artifactId>
             <version>1.0</version>
             <type>war</type>
@@ -92,11 +86,6 @@
                             <groupId>lk.banking.app</groupId>
                             <artifactId>security-module</artifactId>
                             <bundleFileName>security-module.jar</bundleFileName>
-                        </ejbModule>
-                        <ejbModule>
-                            <groupId>lk.banking.app</groupId>
-                            <artifactId>notification-services</artifactId>
-                            <bundleFileName>notification-services.jar</bundleFileName>
                         </ejbModule>
                         <webModule>
                             <groupId>lk.banking.app</groupId>
