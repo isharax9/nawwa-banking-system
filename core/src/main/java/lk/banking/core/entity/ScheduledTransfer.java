@@ -1,22 +1,29 @@
 package lk.banking.core.entity;
 
 import jakarta.persistence.*;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
+/**
+ * Represents a scheduled fund transfer between two accounts.
+ * Includes audit fields, processed flag, and extensibility for future scheduling options.
+ */
 @Entity
 @Table(name = "scheduled_transfers")
-public class ScheduledTransfer {
+public class ScheduledTransfer implements Serializable {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "from_account_id")
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "from_account_id", nullable = false)
     private Account fromAccount;
 
-    @ManyToOne
-    @JoinColumn(name = "to_account_id")
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "to_account_id", nullable = false)
     private Account toAccount;
 
     @Column(nullable = false)
@@ -28,7 +35,13 @@ public class ScheduledTransfer {
     @Column(nullable = false)
     private Boolean processed = false;
 
-    // Constructors, getters, setters
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    // ---- Constructors ----
     public ScheduledTransfer() {}
 
     public ScheduledTransfer(Account fromAccount, Account toAccount, BigDecimal amount, LocalDateTime scheduledTime) {
@@ -37,8 +50,21 @@ public class ScheduledTransfer {
         this.amount = amount;
         this.scheduledTime = scheduledTime;
         this.processed = false;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
-    // Getters and setters
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+    // ---- Getters and Setters ----
     public Long getId() { return id; }
     public Account getFromAccount() { return fromAccount; }
     public void setFromAccount(Account fromAccount) { this.fromAccount = fromAccount; }
@@ -50,4 +76,30 @@ public class ScheduledTransfer {
     public void setScheduledTime(LocalDateTime scheduledTime) { this.scheduledTime = scheduledTime; }
     public Boolean getProcessed() { return processed; }
     public void setProcessed(Boolean processed) { this.processed = processed; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+
+    // ---- equals & hashCode (by id) ----
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ScheduledTransfer)) return false;
+        ScheduledTransfer that = (ScheduledTransfer) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() { return Objects.hash(id); }
+
+    @Override
+    public String toString() {
+        return "ScheduledTransfer{" +
+                "id=" + id +
+                ", fromAccount=" + (fromAccount != null ? fromAccount.getId() : null) +
+                ", toAccount=" + (toAccount != null ? toAccount.getId() : null) +
+                ", amount=" + amount +
+                ", scheduledTime=" + scheduledTime +
+                ", processed=" + processed +
+                '}';
+    }
 }
