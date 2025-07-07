@@ -3,6 +3,10 @@ package lk.banking.core.dto;
 import java.math.BigDecimal;
 import lk.banking.core.entity.enums.AccountType;
 
+/**
+ * Data Transfer Object for Account entity.
+ * Used for creating/updating accounts and transferring account data.
+ */
 public class AccountDto {
     private Long id;
     private String accountNumber;
@@ -19,6 +23,7 @@ public class AccountDto {
         this.balance = balance;
         this.customerId = customerId;
     }
+
     // Getters and setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -30,4 +35,15 @@ public class AccountDto {
     public void setBalance(BigDecimal balance) { this.balance = balance; }
     public Long getCustomerId() { return customerId; }
     public void setCustomerId(Long customerId) { this.customerId = customerId; }
+
+    @Override
+    public String toString() {
+        return "AccountDto{" +
+                "id=" + id +
+                ", accountNumber='" + accountNumber + '\'' +
+                ", type=" + type +
+                ", balance=" + balance +
+                ", customerId=" + customerId +
+                '}';
+    }
 }

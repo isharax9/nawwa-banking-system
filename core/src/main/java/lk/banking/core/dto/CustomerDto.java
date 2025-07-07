@@ -1,5 +1,9 @@
 package lk.banking.core.dto;
 
+/**
+ * Data Transfer Object for Customer entity.
+ * Used for transferring customer data between layers.
+ */
 public class CustomerDto {
     private Long id;
     private String name;
@@ -28,4 +32,15 @@ public class CustomerDto {
     public void setAddress(String address) { this.address = address; }
     public String getPhoneNumber() { return phoneNumber; }
     public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+
+    @Override
+    public String toString() {
+        return "CustomerDto{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", address='" + address + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                '}';
+    }
 }

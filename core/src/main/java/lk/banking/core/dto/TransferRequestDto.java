@@ -2,6 +2,9 @@ package lk.banking.core.dto;
 
 import java.math.BigDecimal;
 
+/**
+ * Data Transfer Object for requesting a fund transfer between two accounts.
+ */
 public class TransferRequestDto {
     private Long fromAccountId;
     private Long toAccountId;
@@ -22,4 +25,13 @@ public class TransferRequestDto {
     public void setToAccountId(Long toAccountId) { this.toAccountId = toAccountId; }
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }
+
+    @Override
+    public String toString() {
+        return "TransferRequestDto{" +
+                "fromAccountId=" + fromAccountId +
+                ", toAccountId=" + toAccountId +
+                ", amount=" + amount +
+                '}';
+    }
 }

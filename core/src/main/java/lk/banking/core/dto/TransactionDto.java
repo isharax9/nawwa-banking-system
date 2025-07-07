@@ -5,6 +5,10 @@ import java.time.LocalDateTime;
 import lk.banking.core.entity.enums.TransactionStatus;
 import lk.banking.core.entity.enums.TransactionType;
 
+/**
+ * Data Transfer Object for Transaction entity.
+ * Used for creating, updating, and transferring transaction data.
+ */
 public class TransactionDto {
     private Long id;
     private Long accountId;
@@ -42,4 +46,17 @@ public class TransactionDto {
     public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    @Override
+    public String toString() {
+        return "TransactionDto{" +
+                "id=" + id +
+                ", accountId=" + accountId +
+                ", amount=" + amount +
+                ", type=" + type +
+                ", status=" + status +
+                ", timestamp=" + timestamp +
+                ", description='" + description + '\'' +
+                '}';
+    }
 }
