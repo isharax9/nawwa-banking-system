@@ -11,7 +11,7 @@
 
     <artifactId>web</artifactId>
     <packaging>war</packaging>
-    <name>banking-system-web</name>
+    <name>banking-web</name>
 
     <dependencies>
 

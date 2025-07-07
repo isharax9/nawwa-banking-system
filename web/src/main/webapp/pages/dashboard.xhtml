@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html">
+<h:head>
+    <title>Dashboard - Macna Banking System</title>
+    <link rel="stylesheet" href="#{request.contextPath}/resources/css/main.css"/>
+</h:head>
+<h:body>
+    <div style="max-width: 540px; margin: 50px auto 0 auto;">
+        <h2>Dashboard</h2>
+        <h3>
+            <h:outputText value="#{dashboardController.welcomeMessage}"/>
+        </h3>
+        <hr/>
+        <h:panelGrid columns="2" style="margin: 25px 0;">
+            <h:commandLink value="View Accounts" action="/pages/accounts.xhtml?faces-redirect=true"/>
+            <h:commandLink value="View Transactions" action="/pages/transactions.xhtml?faces-redirect=true"/>
+        </h:panelGrid>
+        <h:form style="margin-top: 30px;">
+            <h:commandButton value="Logout" action="#{loginController.logout}" styleClass="logout-btn" />
+        </h:form>
+    </div>
+</h:body>
+</html>
