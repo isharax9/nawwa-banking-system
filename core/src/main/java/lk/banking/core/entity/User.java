@@ -11,7 +11,7 @@ import java.util.Set;
 @Table(name = "users",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"username"}),
-                @UniqueConstraint(columnNames = {"email"})
+                @UniqueConstraint(columnNames = {"password"}),
         })
 public class User implements Serializable {
 

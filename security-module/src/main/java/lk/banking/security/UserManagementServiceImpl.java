@@ -27,7 +27,7 @@ public class UserManagementServiceImpl implements UserManagementService {
             dbRole = new Role(role);
             em.persist(dbRole);
         }
-        User user = new User(username, PasswordService.hashPassword(password), new HashSet<>());
+        User user = new User();
         user.getRoles().add(dbRole);
         em.persist(user);
         return user;
