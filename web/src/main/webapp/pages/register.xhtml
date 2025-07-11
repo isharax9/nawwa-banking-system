@@ -1,36 +1,41 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:h="http://xmlns.jcp.org/jsf/html">
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
 <h:head>
-    <title>Register - Macna Banking System</title>
-    <link rel="stylesheet" href="#{request.contextPath}/resources/css/main.css"/>
+    <title>Register for Banking System</title>
+    <h:outputStylesheet library="css" name="style.css"/>
 </h:head>
 <h:body>
-    <h:form>
-        <h2>Create Your Account</h2>
+    <div class="register-container">
+        <h2>Register</h2>
+        <h:form>
+            <h:messages globalOnly="true" infoStyle="color: green;" errorStyle="color: red;" warnStyle="color: orange;"/>
 
-        <h:messages globalOnly="true" layout="table" style="color: red;" />
+            <div class="form-group">
+                <h:outputLabel for="username">Username:</h:outputLabel>
+                <h:inputText id="username" value="#{registrationController.username}" required="true" requiredMessage="Username is required"/>
+            </div>
 
-        <div>
-            <h:outputLabel for="username" value="Username:"/>
-            <h:inputText id="username" value="#{registrationController.username}" required="true" />
-        </div>
-        <div>
-            <h:outputLabel for="password" value="Password:"/>
-            <h:inputSecret id="password" value="#{registrationController.password}" required="true"/>
-        </div>
-        <div>
-            <h:outputLabel for="email" value="Email:"/>
-            <h:inputText id="email" value="#{registrationController.email}" required="true" />
-        </div>
-        <div>
-            <h:outputLabel for="phone" value="Phone:"/>
-            <h:inputText id="phone" value="#{registrationController.phone}" />
-        </div>
+            <div class="form-group">
+                <h:outputLabel for="password">Password:</h:outputLabel>
+                <h:inputSecret id="password" value="#{registrationController.password}" required="true" requiredMessage="Password is required"/>
+            </div>
 
-        <div>
-            <h:commandButton value="Register" action="#{registrationController.register}" />
-        </div>
-    </h:form>
+            <div class="form-group">
+                <h:outputLabel for="email">Email:</h:outputLabel>
+                <h:inputText id="email" value="#{registrationController.email}" required="true" requiredMessage="Email is required"/>
+            </div>
+
+            <div class="form-group">
+                <h:outputLabel for="phone">Phone (Optional):</h:outputLabel>
+                <h:inputText id="phone" value="#{registrationController.phone}"/>
+            </div>
+
+            <h:commandButton value="Register" action="#{registrationController.register}" styleClass="btn-register"/>
+
+            <p>Already have an account? <h:link outcome="/pages/login" value="Login here"/></p>
+        </h:form>
+    </div>
 </h:body>
 </html>

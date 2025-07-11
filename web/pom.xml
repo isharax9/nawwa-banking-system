@@ -26,8 +26,8 @@
         <dependency>
             <groupId>jakarta.platform</groupId>
             <artifactId>jakarta.jakartaee-web-api</artifactId>
-            <version>${jakarta.ee.version}</version>
-            <scope>provided</scope>
+            <version>9.1.0</version> <!-- Or 10.0.0 for Jakarta EE 10, or higher depending on your application server -->
+            <scope>provided</scope> <!-- Provided by the application server (e.g., WildFly, GlassFish) -->
         </dependency>
 
         <!-- JSTL for JSP pages -->
@@ -140,6 +140,12 @@
             <artifactId>primefaces</artifactId>
             <version>13.0.0</version>
             <classifier>jakarta</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.16</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

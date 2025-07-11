@@ -1,6 +1,7 @@
 package lk.banking.security;
 
 import jakarta.ejb.Local;
+import lk.banking.core.dto.RegisterUserDto;
 import lk.banking.core.entity.User;
 import lk.banking.core.entity.enums.UserRole;
 
@@ -14,4 +15,6 @@ public interface UserManagementService {
     List<User> getAllUsers();
     boolean assignRole(Long userId, UserRole role);
     boolean removeUser(Long userId);
+
+    User register(RegisterUserDto registerUserDto);
 }

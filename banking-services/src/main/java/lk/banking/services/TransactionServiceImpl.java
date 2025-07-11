@@ -22,7 +22,6 @@ import lk.banking.services.interceptor.SecurityInterceptor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList; // For getTransactionsByUser
 import java.util.List;
 import java.util.stream.Collectors; // For getTransactionsByUser
 
@@ -149,6 +148,11 @@ public class TransactionServiceImpl implements TransactionServices {
         // If all operations succeed, the transaction (EJB's managed transaction) commits.
         // If any error occurs, the whole operation (debit, credit, transaction records) rolls back.
         return true; // Indicate success as per interface contract
+    }
+
+    @Override
+    public List<Transaction> getTransactionsByAccountAndDateRange(Long accountId, LocalDateTime from, LocalDateTime to, boolean includeArchived) {
+        return List.of();
     }
 
 

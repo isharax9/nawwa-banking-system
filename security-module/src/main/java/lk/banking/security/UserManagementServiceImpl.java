@@ -5,6 +5,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException; // For getSingleResult()
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.NonUniqueResultException; // For unexpected duplicates
+import lk.banking.core.dto.RegisterUserDto;
 import lk.banking.core.entity.Role;
 import lk.banking.core.entity.User;
 import lk.banking.core.entity.enums.UserRole;
@@ -163,5 +164,10 @@ public class UserManagementServiceImpl implements UserManagementService {
         // System.out.println("User with ID " + userId + " has been deactivated.");
         // return true;
         */
+    }
+
+    @Override
+    public User register(RegisterUserDto registerUserDto) {
+        return null;
     }
 }

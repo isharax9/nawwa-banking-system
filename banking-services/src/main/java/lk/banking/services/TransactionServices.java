@@ -5,6 +5,7 @@ import lk.banking.core.dto.TransactionDto;
 import lk.banking.core.entity.Transaction;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Local
@@ -16,5 +17,7 @@ public interface TransactionServices {
 
     boolean transferFunds(Long id, String fromAccount, String toAccount, BigDecimal amount);
 
-    List<Transaction> getTransactionsByUser(Long id);
+    List<Transaction> getTransactionsByAccountAndDateRange(Long accountId, LocalDateTime from, LocalDateTime to, boolean includeArchived);
+
+    List<Transaction> getTransactionsByUser(Long userId);
 }
