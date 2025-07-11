@@ -2,6 +2,7 @@ package lk.banking.services;
 
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject; // Using Inject for potential future use or if you have a CDI setup
+import jakarta.interceptor.Interceptors;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
@@ -14,11 +15,15 @@ import lk.banking.core.exception.CustomerNotFoundException; // Import CustomerNo
 import lk.banking.core.exception.DuplicateAccountException; // Import if you want to handle collisions
 import lk.banking.core.exception.UserNotFoundException; // Assuming you'll add this exception in core.exception
 import lk.banking.core.util.AccountNumberGenerator;
+import lk.banking.services.interceptor.AuditInterceptor;
+import lk.banking.services.interceptor.PerformanceMonitorInterceptor;
+import lk.banking.services.interceptor.SecurityInterceptor;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Stateless
+@Interceptors({AuditInterceptor.class, PerformanceMonitorInterceptor.class, SecurityInterceptor.class})
 public class AccountServiceImpl implements AccountService {
 
     @PersistenceContext(unitName = "bankingPU")

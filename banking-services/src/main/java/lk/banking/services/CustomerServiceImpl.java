@@ -1,6 +1,7 @@
 package lk.banking.services;
 
 import jakarta.ejb.Stateless;
+import jakarta.interceptor.Interceptors;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.NoResultException; // Import for specific query results
@@ -8,10 +9,14 @@ import lk.banking.core.dto.CustomerDto;
 import lk.banking.core.entity.Customer;
 import lk.banking.core.exception.CustomerNotFoundException; // Corrected import
 import lk.banking.core.exception.ResourceConflictException; // Assuming you'd use this for duplicates
+import lk.banking.services.interceptor.AuditInterceptor;
+import lk.banking.services.interceptor.PerformanceMonitorInterceptor;
+import lk.banking.services.interceptor.SecurityInterceptor;
 
 import java.util.List;
 
 @Stateless
+@Interceptors({AuditInterceptor.class, PerformanceMonitorInterceptor.class, SecurityInterceptor.class})
 public class CustomerServiceImpl implements CustomerService {
 
     @PersistenceContext(unitName = "bankingPU")

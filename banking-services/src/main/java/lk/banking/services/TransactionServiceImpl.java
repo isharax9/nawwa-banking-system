@@ -1,6 +1,7 @@
 package lk.banking.services;
 
 import jakarta.ejb.Stateless;
+import jakarta.interceptor.Interceptors;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.NoResultException; // For specific query results
@@ -15,6 +16,9 @@ import lk.banking.core.exception.AccountNotFoundException;
 import lk.banking.core.exception.InsufficientFundsException; // Import
 import lk.banking.core.exception.InvalidTransactionException; // Import
 import lk.banking.core.exception.UserNotFoundException; // Import
+import lk.banking.services.interceptor.AuditInterceptor;
+import lk.banking.services.interceptor.PerformanceMonitorInterceptor;
+import lk.banking.services.interceptor.SecurityInterceptor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -23,7 +27,7 @@ import java.util.List;
 import java.util.stream.Collectors; // For getTransactionsByUser
 
 @Stateless
-// Removed 'abstract' keyword
+@Interceptors({AuditInterceptor.class, PerformanceMonitorInterceptor.class, SecurityInterceptor.class})
 public class TransactionServiceImpl implements TransactionServices {
 
     @PersistenceContext(unitName = "bankingPU")
