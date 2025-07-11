@@ -28,6 +28,9 @@ public class Transaction implements Serializable {
     @Column(nullable = false)
     private BigDecimal amount;
 
+    @Column(nullable = false)
+    private Boolean isArchived = false; // Add this field
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
     private TransactionType type;
@@ -56,6 +59,8 @@ public class Transaction implements Serializable {
     }
 
     // ---- Getters and Setters ----
+    public Boolean getIsArchived() { return isArchived; }
+    public void setIsArchived(Boolean isArchived) { this.isArchived = isArchived; }
     public Long getId() { return id; }
     public Account getAccount() { return account; }
     public void setAccount(Account account) { this.account = account; }
