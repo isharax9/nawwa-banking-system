@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+<h:head>
+    <title>Create User - Macna Banking System</title>
+    <link rel="stylesheet" href="#{request.contextPath}/resources/css/main.css"/>
+</h:head>
+<h:body>
+    <h:form>
+        <h2>Create User</h2>
+        <h:messages globalOnly="true" layout="table" style="color: red;" />
+
+        <div>
+            <h:outputLabel for="username" value="Username:"/>
+            <h:inputText id="username" value="#{userController.username}" required="true" />
+        </div>
+        <div>
+            <h:outputLabel for="password" value="Password:"/>
+            <h:inputSecret id="password" value="#{userController.password}" required="true"/>
+        </div>
+        <div>
+            <h:outputLabel for="email" value="Email:"/>
+            <h:inputText id="email" value="#{userController.email}" required="true" />
+        </div>
+        <div>
+            <h:outputLabel for="phone" value="Phone:"/>
+            <h:inputText id="phone" value="#{userController.phone}" />
+        </div>
+        <div>
+            <h:outputLabel for="role" value="Role:"/>
+            <h:selectOneMenu id="role" value="#{userController.role}">
+                <f:selectItems value="#{userController.availableRoles}" var="role"
+                               itemValue="#{role}" itemLabel="#{role}" />
+            </h:selectOneMenu>
+        </div>
+        <div>
+            <h:commandButton value="Create User" action="#{userController.createUser}" />
+        </div>
+    </h:form>
+</h:body>
+</html>

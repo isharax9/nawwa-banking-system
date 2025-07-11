@@ -11,7 +11,7 @@ import java.util.Set;
 @Table(name = "users",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"username"}),
-                @UniqueConstraint(columnNames = {"password"}),
+                @UniqueConstraint(columnNames = {"email"}) // Added unique constraint for email
         })
 public class User implements Serializable {
 
@@ -22,10 +22,10 @@ public class User implements Serializable {
     @Column(nullable = false, unique = true, length = 64)
     private String username;
 
-    @Column(nullable = false, length = 128)
+    @Column(nullable = false, length = 128) // This column will store the hashed password
     private String password;
 
-    @Column(nullable = false, unique = true, length = 128)
+    @Column(nullable = false, unique = true, length = 128) // Email is now explicitly unique
     private String email;
 
     @Column(length = 20)
@@ -53,7 +53,7 @@ public class User implements Serializable {
 
     public User(String username, String password, String email, String phone, Set<Role> roles) {
         this.username = username;
-        this.password = password;
+        this.password = password; // Remember: this *must* be a hashed password from the service layer
         this.email = email;
         this.phone = phone;
         this.roles = roles != null ? roles : new HashSet<>();
@@ -87,7 +87,7 @@ public class User implements Serializable {
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
     public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public void setPassword(String password) { this.password = password; } // Set hashed password
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     public String getPhone() { return phone; }

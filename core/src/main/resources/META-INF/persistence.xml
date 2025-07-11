@@ -10,6 +10,8 @@
         <class>lk.banking.core.entity.Role</class>
         <properties>
             <property name="jakarta.persistence.schema-generation.database.action" value="create"/>
+            <property name="jakarta.persistence.jdbc.time_zone" value="UTC"/>
+
         </properties>
     </persistence-unit>
 </persistence>
