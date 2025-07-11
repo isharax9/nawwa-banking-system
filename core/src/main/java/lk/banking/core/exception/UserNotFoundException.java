@@ -1,4 +1,4 @@
-// lk.banking.core.exception.UserNotFoundException.java
+// File: lk/banking/core/exception/UserNotFoundException.java
 package lk.banking.core.exception;
 
 /**
@@ -7,5 +7,8 @@ package lk.banking.core.exception;
 public class UserNotFoundException extends BankingException {
   public UserNotFoundException(String message) {
     super(message);
+  }
+  public UserNotFoundException(String message, Throwable cause) {
+    super(message, cause);
   }
 }
