@@ -321,3 +321,23 @@ input[type="radio"] + label {
     color: #333;
 }
 */
+
+/* ... existing styles like .banking-form, .form-group, .form-control, .btn, etc. ... */
+
+/* Specific styling for the checkbox/radio group */
+.form-check {
+    display: flex; /* Align checkbox and label */
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.form-check-input {
+    margin-right: 8px; /* Space between checkbox and label */
+    flex-shrink: 0; /* Prevent checkbox from shrinking */
+}
+
+.form-check-label {
+    margin-bottom: 0; /* Remove default label margin */
+    cursor: pointer;
+    color: #333;
+}

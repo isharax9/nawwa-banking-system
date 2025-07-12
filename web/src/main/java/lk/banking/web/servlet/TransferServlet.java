@@ -10,19 +10,27 @@ import jakarta.servlet.http.HttpServletResponse;
 import lk.banking.core.dto.LoggedInUser;
 import lk.banking.core.dto.TransferRequestDto;
 import lk.banking.core.entity.Account;
+import lk.banking.core.entity.ScheduledTransfer;
 import lk.banking.core.exception.AccountNotFoundException;
+import lk.banking.core.exception.BankingException;
 import lk.banking.core.exception.InsufficientFundsException;
 import lk.banking.core.exception.InvalidTransactionException;
+import lk.banking.core.exception.ScheduledTransferException;
 import lk.banking.core.exception.ValidationException;
 import lk.banking.services.AccountService;
-import lk.banking.transaction.TransactionManager; // Use interface type
+import lk.banking.transaction.ScheduledTransferService;
+import lk.banking.transaction.TransactionManager;
 import lk.banking.web.util.FlashMessageUtil;
+import lk.banking.web.util.ServletUtil;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
@@ -36,21 +44,26 @@ public class TransferServlet extends HttpServlet {
     @EJB
     private AccountService accountService;
 
-    // Declare as interface type, as per previous fix
     private TransactionManager transactionManager;
+    private ScheduledTransferService scheduledTransferService;
 
     @Override
     public void init() throws ServletException {
         super.init();
         try {
-            // Retrieve the exact JNDI name from your GlassFish logs
-            String jndiName = "java:global/banking-system-ear/transaction-services/TransactionManagerBean!lk.banking.transaction.TransactionManager"; // CONFIRM THIS JNDI NAME FROM GLASSFISH LOGS
-            LOGGER.info("TransferServlet: Attempting JNDI lookup for TransactionManager at: " + jndiName);
-            transactionManager = (TransactionManager) new InitialContext().lookup(jndiName);
+            String transactionManagerJndiName = "java:global/banking-system-ear/transaction-services/TransactionManagerBean!lk.banking.transaction.TransactionManager";
+            LOGGER.info("TransferServlet: Attempting JNDI lookup for TransactionManager at: " + transactionManagerJndiName);
+            transactionManager = (TransactionManager) new InitialContext().lookup(transactionManagerJndiName);
             LOGGER.info("TransferServlet: JNDI lookup successful for TransactionManager.");
+
+            String scheduledTransferServiceJndiName = "java:global/banking-system-ear/transaction-services/ScheduledTransferServiceImpl!lk.banking.transaction.ScheduledTransferService";
+            LOGGER.info("TransferServlet: Attempting JNDI lookup for ScheduledTransferService at: " + scheduledTransferServiceJndiName);
+            scheduledTransferService = (ScheduledTransferService) new InitialContext().lookup(scheduledTransferServiceJndiName);
+            LOGGER.info("TransferServlet: JNDI lookup successful for ScheduledTransferService.");
+
         } catch (NamingException e) {
-            LOGGER.log(java.util.logging.Level.SEVERE, "TransferServlet: Failed to lookup TransactionManager via JNDI.", e);
-            throw new ServletException("Failed to initialize TransferServlet: TransactionManager not found.", e);
+            LOGGER.log(java.util.logging.Level.SEVERE, "TransferServlet: Failed to lookup one or more EJB services via JNDI.", e);
+            throw new ServletException("Failed to initialize TransferServlet: Required services not found.", e);
         }
     }
 
@@ -70,6 +83,9 @@ public class TransferServlet extends HttpServlet {
             List<Account> accounts = accountService.getAccountsByCustomer(loggedInUser.getCustomerId());
             request.setAttribute("accounts", accounts);
             LOGGER.info("TransferServlet: Loaded " + accounts.size() + " accounts for user " + loggedInUser.getUsername());
+
+            // NEW: Set the minimum date for the scheduledDate input to TODAY
+            request.setAttribute("minScheduledDate", LocalDate.now().toString()); // Allow today for testing
 
             request.getRequestDispatcher("/WEB-INF/jsp/transfer.jsp").forward(request, response);
 
@@ -100,14 +116,19 @@ public class TransferServlet extends HttpServlet {
         }
 
         String fromAccountIdStr = request.getParameter("fromAccountId");
-        String toAccountNumberStr = request.getParameter("toAccountNumber"); // Changed from toAccountIdStr
+        String toAccountNumberStr = request.getParameter("toAccountNumber");
         String amountStr = request.getParameter("amount");
+        String scheduleTransferParam = request.getParameter("scheduleTransfer");
+        String scheduledDateStr = request.getParameter("scheduledDate");
+        String scheduledTimeStr = request.getParameter("scheduledTime");
+
 
         Long fromAccountId = null;
-        Long toAccountId = null; // Will be obtained after lookup
+        Long toAccountId = null;
         BigDecimal amount = null;
+        boolean isScheduled = "on".equals(scheduleTransferParam);
+        LocalDateTime scheduledDateTime = null;
 
-        // --- Input Validation ---
         String errorMessage = null;
         if (fromAccountIdStr == null || fromAccountIdStr.trim().isEmpty()) {
             errorMessage = "Source account is required.";
@@ -119,8 +140,6 @@ public class TransferServlet extends HttpServlet {
         if (errorMessage == null && (toAccountNumberStr == null || toAccountNumberStr.trim().isEmpty())) {
             errorMessage = "Destination account number is required.";
         }
-        // No format validation for account number here, as AccountService.getAccountByNumber will handle "not found"
-
 
         if (errorMessage == null && (amountStr == null || amountStr.trim().isEmpty())) {
             errorMessage = "Amount is required.";
@@ -135,24 +154,52 @@ public class TransferServlet extends HttpServlet {
             }
         }
 
+        if (errorMessage == null && isScheduled) {
+            if (scheduledDateStr == null || scheduledDateStr.trim().isEmpty()) {
+                errorMessage = "Scheduled date is required for scheduled transfers.";
+            } else if (scheduledTimeStr == null || scheduledTimeStr.trim().isEmpty()) {
+                errorMessage = "Scheduled time is required for scheduled transfers.";
+            } else {
+                try {
+                    LocalDate scheduledDate = LocalDate.parse(scheduledDateStr);
+                    LocalTime scheduledTime = LocalTime.parse(scheduledTimeStr);
+                    scheduledDateTime = LocalDateTime.of(scheduledDate, scheduledTime);
+
+                    // TEMPORARY CHANGE FOR TESTING: Allow scheduling for current time or later
+                    if (scheduledDateTime.isBefore(LocalDateTime.now())) { // Check against current time
+                        errorMessage = "Scheduled transfers must be set for the current time or later.";
+                    }
+                    // ORIGINAL: if (scheduledDateTime.isBefore(LocalDateTime.now().plusDays(1).withHour(0).withMinute(0).withSecond(0).withNano(0))) {
+                    // ORIGINAL:    errorMessage = "Scheduled transfers must be set for tomorrow or later.";
+                    // ORIGINAL: }
+                } catch (DateTimeParseException e) {
+                    errorMessage = "Invalid date or time format for scheduled transfer.";
+                    LOGGER.warning("TransferServlet: DateTimeParse error: " + e.getMessage());
+                }
+            }
+        }
+
         if (errorMessage != null) {
             request.setAttribute("errorMessage", errorMessage);
             LOGGER.warning("TransferServlet: Validation error: " + errorMessage);
-            doGet(request, response); // Redisplay form with error, preserving input
+            doGet(request, response);
             return;
         }
 
         try {
             if (transactionManager == null) {
                 LOGGER.severe("TransferServlet: TransactionManager is null. JNDI lookup failed during servlet initialization.");
-                throw new ServletException("Service unavailable. Please try again later.");
+                throw new ServletException("Service 'TransactionManager' unavailable. Please try again later.");
+            }
+            if (isScheduled && scheduledTransferService == null) {
+                LOGGER.severe("TransferServlet: ScheduledTransferService is null. JNDI lookup failed during servlet initialization.");
+                throw new ServletException("Service 'ScheduledTransferService' unavailable. Please try again later.");
             }
 
-            // Look up destination account by number
             Account toAccount = null;
             try {
                 toAccount = accountService.getAccountByNumber(toAccountNumberStr);
-                toAccountId = toAccount.getId(); // Get the ID for the DTO
+                toAccountId = toAccount.getId();
             } catch (AccountNotFoundException e) {
                 errorMessage = "Destination account not found: " + e.getMessage();
                 LOGGER.warning("TransferServlet: Destination account lookup failed: " + e.getMessage());
@@ -161,8 +208,6 @@ public class TransferServlet extends HttpServlet {
                 return;
             }
 
-
-            // Additional business-level validation (after lookup)
             if (fromAccountId.equals(toAccountId)) {
                 errorMessage = "Cannot transfer funds to the same account.";
             }
@@ -170,42 +215,67 @@ public class TransferServlet extends HttpServlet {
             if (errorMessage != null) {
                 request.setAttribute("errorMessage", errorMessage);
                 LOGGER.warning("TransferServlet: Business validation error: " + errorMessage);
-                doGet(request, response); // Redisplay form with error
+                doGet(request, response);
                 return;
             }
 
+            Account fromAccount = null;
+            try {
+                fromAccount = accountService.getAccountById(fromAccountId);
+            } catch (AccountNotFoundException e) {
+                errorMessage = "Source account not found: " + e.getMessage();
+                LOGGER.severe("TransferServlet: Source account lookup failed for logged-in user's account: " + e.getMessage());
+                request.setAttribute("errorMessage", errorMessage);
+                doGet(request, response);
+                return;
+            }
 
-            // Create a TransferRequestDto
-            TransferRequestDto transferRequestDto = new TransferRequestDto(fromAccountId, toAccountId, amount);
+            String successMessage;
+            if (isScheduled) {
+                ScheduledTransfer scheduledTransfer = new ScheduledTransfer(
+                        fromAccount,
+                        toAccount,
+                        amount,
+                        scheduledDateTime
+                );
+                scheduledTransferService.scheduleTransfer(scheduledTransfer);
+                successMessage = String.format("Transfer of $%s from %s to %s scheduled successfully for %s!",
+                        amount, fromAccount.getAccountNumber(), toAccountNumberStr, scheduledDateTime);
+                LOGGER.info("TransferServlet: Scheduled transfer created: " + scheduledTransfer.getId());
+            } else {
+                TransferRequestDto transferRequestDto = new TransferRequestDto(fromAccountId, toAccountId, amount);
+                transactionManager.transferFunds(transferRequestDto);
+                successMessage = String.format("Immediate transfer of $%s from %s to %s completed successfully!",
+                        amount, fromAccount.getAccountNumber(), toAccountNumberStr);
+                LOGGER.info("TransferServlet: Immediate transfer completed.");
+            }
 
-            // Process the transfer using the TransactionManagerBean's FundTransferService
-            transactionManager.transferFunds(transferRequestDto);
-
-            LOGGER.info("TransferServlet: Funds transfer of " + amount + " from account ID " + fromAccountId + " to account ID " + toAccountId + " (Number: " + toAccountNumberStr + ") successful by user " + loggedInUser.getUsername());
-            FlashMessageUtil.putSuccessMessage(request.getSession(), "Transfer of " + amount + " from " + fromAccountId + " to " + toAccountNumberStr + " completed successfully!");
+            FlashMessageUtil.putSuccessMessage(request.getSession(), successMessage);
             response.sendRedirect(request.getContextPath() + "/dashboard");
 
-        } catch (EJBException e) {
-            Throwable cause = e.getCause();
+        } catch (Exception e) {
+            Exception unwrappedException = ServletUtil.unwrapEJBException(e);
+
             String displayErrorMessage;
-            if (cause instanceof AccountNotFoundException) {
-                displayErrorMessage = "Account not found: " + cause.getMessage();
-                LOGGER.warning("TransferServlet: Account not found during transfer: " + cause.getMessage());
-            } else if (cause instanceof InsufficientFundsException) {
-                displayErrorMessage = "Insufficient funds: " + cause.getMessage();
-                LOGGER.warning("TransferServlet: Insufficient funds for transfer: " + cause.getMessage());
-            } else if (cause instanceof InvalidTransactionException || cause instanceof ValidationException) {
-                displayErrorMessage = "Invalid transfer: " + cause.getMessage();
-                LOGGER.warning("TransferServlet: Invalid transfer details: " + cause.getMessage());
+            if (unwrappedException instanceof BankingException) {
+                BankingException bankingCause = (BankingException) unwrappedException;
+                if (bankingCause instanceof AccountNotFoundException) {
+                    displayErrorMessage = "Account not found: " + bankingCause.getMessage();
+                } else if (bankingCause instanceof InsufficientFundsException) {
+                    displayErrorMessage = "Insufficient funds: " + bankingCause.getMessage();
+                } else if (bankingCause instanceof InvalidTransactionException || bankingCause instanceof ValidationException) {
+                    displayErrorMessage = "Invalid transfer: " + bankingCause.getMessage();
+                } else if (bankingCause instanceof ScheduledTransferException) {
+                    displayErrorMessage = "Scheduled transfer error: " + bankingCause.getMessage();
+                } else {
+                    displayErrorMessage = "A banking-related error occurred: " + bankingCause.getMessage();
+                }
+                LOGGER.log(java.util.logging.Level.WARNING, "TransferServlet: Banking error during transfer for user " + loggedInUser.getUsername() + ": " + displayErrorMessage, unwrappedException);
             } else {
-                displayErrorMessage = "An unexpected banking error occurred. Please try again.";
-                LOGGER.log(java.util.logging.Level.SEVERE, "TransferServlet: Unexpected EJBException during transfer processing for user " + loggedInUser.getUsername(), e);
+                displayErrorMessage = "An unexpected error occurred. Please try again later.";
+                LOGGER.log(java.util.logging.Level.SEVERE, "TransferServlet: An unexpected error during transfer processing for user " + loggedInUser.getUsername(), unwrappedException);
             }
             request.setAttribute("errorMessage", displayErrorMessage);
-            doGet(request, response); // Redisplay form with error
-        } catch (Exception e) {
-            LOGGER.log(java.util.logging.Level.SEVERE, "TransferServlet: An unexpected general error occurred during transfer processing for user " + loggedInUser.getUsername(), e);
-            request.setAttribute("errorMessage", "An unexpected error occurred. Please try again later.");
             doGet(request, response);
         }
     }
