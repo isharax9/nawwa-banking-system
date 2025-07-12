@@ -4,49 +4,32 @@
          xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
          version="6.0">
 
-    <!-- Faces Servlet Configuration -->
-    <servlet>
-        <servlet-name>Faces Servlet</servlet-name>
-        <servlet-class>jakarta.faces.webapp.FacesServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-
-    <!-- Faces Servlet Mapping -->
-    <servlet-mapping>
-        <servlet-name>Faces Servlet</servlet-name>
-        <url-pattern>*.xhtml</url-pattern>
-    </servlet-mapping>
-
-    <!-- Welcome File -->
+    <!-- Welcome file: When someone accesses your context root (e.g., http://localhost:8080/banking-web/),
+         it will automatically forward to index.jsp -->
     <welcome-file-list>
-        <welcome-file>pages/login.xhtml</welcome-file>
-        <!-- You might also have an index.html that redirects to login.xhtml -->
+        <welcome-file>index.jsp</welcome-file>
     </welcome-file-list>
 
-    <!-- Error Pages (Optional but Recommended) -->
-    <error-page>
-        <exception-type>jakarta.faces.application.ViewExpiredException</exception-type>
-        <location>/pages/login.xhtml</location>
-    </error-page>
-    <error-page>
-        <error-code>404</error-code>
-        <location>/pages/error/404.xhtml</location>
-    </error-page>
-    <error-page>
-        <error-code>500</error-code>
-        <location>/pages/error/500.xhtml</location>
-    </error-page>
+    <!--
+        Servlet Declarations and Mappings will go here.
+        We'll add our LoginServlet here in the next step.
+    -->
 
-    <!-- Security Constraints (Optional, if not using filters for all security) -->
-    <!-- Your AuthenticationFilter handles /pages/* redirect -->
+    <!--
+        JSP Configuration (Optional, but can be useful)
+        You can configure default JSP pages, or specific JSP properties.
+    -->
+    <jsp-config>
+        <jsp-property-group>
+            <url-pattern>*.jsp</url-pattern>
+            <page-encoding>UTF-8</page-encoding>
+            <!-- To enable EL in template text, useful for HTML content -->
+            <scripting-invalid>true</scripting-invalid>
+            <trim-directive-whitespaces>true</trim-directive-whitespaces>
+        </jsp-property-group>
+    </jsp-config>
 
-    <!-- Session Timeout (in minutes) -->
-    <session-config>
-        <session-timeout>30</session-timeout>
-        <tracking-mode>COOKIE</tracking-mode>
-    </session-config>
+    <!-- Error Pages (Optional, but good for user experience) -->
 
-    <!-- CDI Integration for JSF (automatic with Jakarta EE 8+, no need for beans.xml unless specific config) -->
-    <!-- You might also need a META-INF/beans.xml in your WAR for CDI to be active -->
-    <!-- src/main/webapp/META-INF/beans.xml (empty file) -->
+
 </web-app>

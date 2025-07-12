@@ -37,6 +37,13 @@
             <version>3.0.1</version>
         </dependency>
 
+        <!-- In your web module's pom.xml -->
+        <dependency>
+            <groupId>jakarta.servlet.jsp.jstl</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
+            <version>3.0.0</version> <!-- Or compatible version with your Jakarta EE -->
+        </dependency>
+
         <!-- Core module for entities and DTOs -->
         <dependency>
             <groupId>lk.banking.app</groupId>
