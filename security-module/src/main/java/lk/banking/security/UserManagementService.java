@@ -9,7 +9,8 @@ import java.util.List;
 
 @Local
 public interface UserManagementService {
-    User register(String username, String password, UserRole role);
+    // Modified: Added email, name, address, phoneNumber for customer registration
+    User register(String username, String password, String email, String name, String address, String phoneNumber, UserRole role);
     User getUserById(Long id);
     User getUserByUsername(String username);
     List<User> getAllUsers();
@@ -17,4 +18,6 @@ public interface UserManagementService {
     boolean removeUser(Long userId);
 
     User register(RegisterUserDto registerUserDto);
+
+    User register(String username, String password, UserRole userRole);
 }

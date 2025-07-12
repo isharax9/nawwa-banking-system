@@ -83,4 +83,14 @@ public class CustomerServiceImpl implements CustomerService {
         }
         em.remove(customer);
     }
+    @Override
+    public Customer getCustomerByEmail(String email) {
+        try {
+            return em.createQuery("SELECT c FROM Customer c WHERE c.email = :email", Customer.class)
+                    .setParameter("email", email)
+                    .getSingleResult();
+        } catch (jakarta.persistence.NoResultException e) {
+            return null; // Or throw CustomerNotFoundException if preferred for consistency
+        }
+    }
 }

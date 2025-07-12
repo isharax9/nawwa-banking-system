@@ -68,3 +68,57 @@ button:hover {
     text-align: center;
 }
 /* You can reuse form, label, input, button styles from login-container */
+
+/* ... existing styles ... */
+
+.home-container {
+    background-color: #fff;
+    padding: 50px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
+    width: 600px;
+    text-align: center;
+}
+
+.home-container h1 {
+    color: #007bff;
+    font-size: 2.5em;
+    margin-bottom: 20px;
+}
+
+.home-container p {
+    color: #555;
+    font-size: 1.1em;
+    margin-bottom: 30px;
+}
+
+.home-buttons .button {
+    display: inline-block;
+    background-color: #28a745; /* Green for register */
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 1.1em;
+    margin: 0 10px;
+    transition: background-color 0.3s ease;
+}
+
+.home-buttons .button:hover {
+    background-color: #218838;
+}
+
+.home-buttons .button:first-child {
+    background-color: #007bff; /* Blue for login */
+}
+
+.home-buttons .button:first-child:hover {
+    background-color: #0056b3;
+}
+
+.tagline {
+    margin-top: 40px;
+    font-style: italic;
+    color: #777;
+}

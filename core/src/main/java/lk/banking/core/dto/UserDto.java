@@ -10,6 +10,15 @@ public class UserDto {
     private Long id;
     private String username;
     private Set<UserRole> roles;
+    private String email; // Optional: If you want to include email in the DTO
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
     public UserDto() {}
 

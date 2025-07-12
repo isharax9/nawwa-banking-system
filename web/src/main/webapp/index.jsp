@@ -1,17 +1,18 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: ishara
-  Date: 2025-07-12
-  Time: 6:00 PM
-  To change this template use File | Settings | File Templates.
---%>
 <!DOCTYPE html>
 <html>
 <head>
   <title>Welcome to Banking System</title>
-  <meta http-equiv="refresh" content="0;url=login"> <!-- Redirects to /login servlet immediately -->
+  <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/style.css">
 </head>
 <body>
-<p>Redirecting to login page...</p>
+<div class="home-container">
+  <h1>Welcome to Your Secure Banking System!</h1>
+  <p>Your trusted partner for all banking needs.</p>
+  <div class="home-buttons">
+    <a href="${pageContext.request.contextPath}/login" class="button">Login</a>
+    <a href="${pageContext.request.contextPath}/register" class="button">Register</a>
+  </div>
+  <p class="tagline">Manage your finances with ease and security.</p>
+</div>
 </body>
 </html>

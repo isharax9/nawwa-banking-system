@@ -1,48 +1,48 @@
 package lk.banking.web.servlet;
 
-import jakarta.inject.Inject; // For injecting EJBs
+import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet; // For simpler servlet mapping
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lk.banking.core.dto.LoggedInUser; // Use LoggedInUser
+import lk.banking.core.entity.Customer; // To get customerId
 import lk.banking.core.entity.User;
-import lk.banking.core.exception.UnauthorizedAccessException; // Your custom exception
-import lk.banking.security.AuthenticationService; // Your EJB authentication service
+import lk.banking.core.entity.enums.UserRole; // For checking roles
+import lk.banking.core.exception.UnauthorizedAccessException;
+import lk.banking.core.mapper.LoggedInUserMapper; // Use new mapper
+import lk.banking.security.AuthenticationService;
+import lk.banking.services.CustomerService; // Inject CustomerService
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
-/**
- * Servlet for handling user login requests.
- * Displays the login form on GET and processes login on POST.
- */
-@WebServlet("/login") // This maps the servlet to the URL /login
+@WebServlet("/login")
 public class LoginServlet extends HttpServlet {
 
-    @Inject // Inject the AuthenticationService EJB
+    private static final Logger LOGGER = Logger.getLogger(LoginServlet.class.getName());
+
+    @Inject
     private AuthenticationService authenticationService;
 
-    /**
-     * Handles GET requests to display the login form.
-     * @param request The HttpServletRequest.
-     * @param response The HttpServletResponse.
-     * @throws ServletException If a servlet-specific error occurs.
-     * @throws IOException If an I/O error occurs.
-     */
+    @Inject // Inject CustomerService to get customerId for logged-in user
+    private CustomerService customerService;
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Forward to the login JSP page
+        LOGGER.info("LoginServlet: Handling GET request to display login form.");
+        // Check for success message from registration
+        if ("true".equals(request.getParameter("registrationSuccess"))) {
+            request.setAttribute("successMessage", "Registration successful! You can now log in.");
+        }
+        if ("true".equals(request.getParameter("logoutSuccess"))) {
+            request.setAttribute("successMessage", "You have been successfully logged out.");
+        }
         request.getRequestDispatcher("/WEB-INF/jsp/login.jsp").forward(request, response);
     }
 
-    /**
-     * Handles POST requests to process login form submissions.
-     * @param request The HttpServletRequest.
-     * @param response The HttpServletResponse.
-     * @throws ServletException If a servlet-specific error occurs.
-     * @throws IOException If an I/O error occurs.
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -50,35 +50,50 @@ public class LoginServlet extends HttpServlet {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
 
+        LOGGER.info("LoginServlet: Processing POST request for username: " + username);
         if (username == null || username.trim().isEmpty() || password == null || password.trim().isEmpty()) {
             request.setAttribute("errorMessage", "Username and password are required.");
-            doGet(request, response); // Redisplay form with error
+            LOGGER.warning("LoginServlet: Missing username or password.");
+            doGet(request, response);
             return;
         }
 
         try {
-            // Attempt to authenticate the user using the EJB service
             User authenticatedUser = authenticationService.authenticate(username, password);
 
-            // If authentication is successful, store user info in session and redirect
-            // IMPORTANT: For production, only store non-sensitive user info (e.g., ID, username, roles)
-            request.getSession().setAttribute("loggedInUser", authenticatedUser); // Storing entire User entity for simplicity, but UserDto is safer
-            request.getSession().setAttribute("username", authenticatedUser.getUsername());
-            request.getSession().setAttribute("userId", authenticatedUser.getId());
-            // You might also store roles:
-            // request.getSession().setAttribute("userRoles", authenticatedUser.getRoles().stream().map(r -> r.getName().name()).collect(Collectors.toSet()));
+            Long customerId = null;
+            // If the user has a CUSTOMER role, try to find their associated customerId
+            if (authenticatedUser.getRoles().stream().anyMatch(role -> role.getName() == UserRole.CUSTOMER)) {
+                try {
+                    Customer customer = customerService.getCustomerByEmail(authenticatedUser.getEmail());
+                    if (customer != null) {
+                        customerId = customer.getId();
+                        LOGGER.info("LoginServlet: Found customer ID " + customerId + " for user " + username);
+                    } else {
+                        // This case should ideally not happen if registration is done correctly
+                        LOGGER.warning("LoginServlet: CUSTOMER user '" + username + "' has no linked Customer entity for email: " + authenticatedUser.getEmail());
+                    }
+                } catch (Exception customerEx) {
+                    LOGGER.log(java.util.logging.Level.WARNING, "LoginServlet: Error fetching customer for user " + username, customerEx);
+                }
+            }
 
-            // Redirect to a dashboard or welcome page
-            response.sendRedirect(request.getContextPath() + "/dashboard"); // We'll create /dashboard next
+            // Create LoggedInUser DTO for session storage
+            LoggedInUser loggedInUser = LoggedInUserMapper.toLoggedInUser(authenticatedUser, customerId);
+
+            // Store essential user info in session
+            request.getSession().setAttribute("loggedInUser", loggedInUser);
+
+            LOGGER.info("LoginServlet: User '" + username + "' authenticated successfully. Redirecting to dashboard.");
+            response.sendRedirect(request.getContextPath() + "/dashboard");
         } catch (UnauthorizedAccessException e) {
-            // Authentication failed due to invalid credentials
             request.setAttribute("errorMessage", "Invalid username or password.");
-            doGet(request, response); // Redisplay form with error
+            LOGGER.warning("LoginServlet: Authentication failed for user '" + username + "': " + e.getMessage());
+            doGet(request, response);
         } catch (Exception e) {
-            // Catch any other unexpected exceptions from the EJB layer
-            e.printStackTrace(); // Log the full stack trace for debugging
-            request.setAttribute("errorMessage", "An unexpected error occurred during login. Please try again later.");
-            doGet(request, response); // Redisplay form with error
+            LOGGER.log(java.util.logging.Level.SEVERE, "LoginServlet: An unexpected error occurred during login for user '" + username + "'.", e);
+            request.setAttribute("errorMessage", "An unexpected error occurred. Please try again later.");
+            doGet(request, response);
         }
     }
 }
