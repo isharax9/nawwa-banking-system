@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter; // IMPORT THIS
 import java.util.Objects;
 
 /**
@@ -18,11 +19,11 @@ public class ScheduledTransfer implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY) // FetchType.LAZY is fine, but remember to JOIN FETCH in queries for JSP display
     @JoinColumn(name = "from_account_id", nullable = false)
     private Account fromAccount;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY) // FetchType.LAZY is fine
     @JoinColumn(name = "to_account_id", nullable = false)
     private Account toAccount;
 
@@ -49,7 +50,7 @@ public class ScheduledTransfer implements Serializable {
         this.toAccount = toAccount;
         this.amount = amount;
         this.scheduledTime = scheduledTime;
-        this.processed = false;
+        this.processed = false; // Always false when scheduled initially
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -78,6 +79,31 @@ public class ScheduledTransfer implements Serializable {
     public void setProcessed(Boolean processed) { this.processed = processed; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+
+    // NEW METHODS: Formatted timestamps for JSP display
+    /**
+     * Helper method to format the scheduledTime for display in JSPs.
+     * @return Formatted scheduledTime string, or empty string if null.
+     */
+    public String getFormattedScheduledTime() {
+        if (this.scheduledTime == null) {
+            return "";
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        return this.scheduledTime.format(formatter);
+    }
+
+    /**
+     * Helper method to format the createdAt timestamp for display in JSPs.
+     * @return Formatted createdAt string, or empty string if null.
+     */
+    public String getFormattedCreatedAt() {
+        if (this.createdAt == null) {
+            return "";
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        return this.createdAt.format(formatter);
+    }
 
     // ---- equals & hashCode (by id) ----
     @Override

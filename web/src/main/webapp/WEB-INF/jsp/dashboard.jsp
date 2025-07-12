@@ -16,6 +16,7 @@
       <a href="${pageContext.request.contextPath}/profile-edit">Edit Profile</a>
       <a href="${pageContext.request.contextPath}/transfer">Transfer Funds</a>
       <a href="${pageContext.request.contextPath}/deposit-withdraw">Deposit/Withdraw</a>
+      <a href="${pageContext.request.contextPath}/scheduled-transfers">Scheduled Transfers</a> <!-- NEW LINK -->
     </c:if>
     <c:if test="${loggedInUser.hasRole('ADMIN') || loggedInUser.hasRole('EMPLOYEE')}">
       <a href="${pageContext.request.contextPath}/users/manage">Manage Users</a>
@@ -53,7 +54,7 @@
               <h3>Account: ${account.accountNumber}</h3>
               <p>Type: ${account.type}</p>
               <p>Balance: <fmt:formatNumber value="${account.balance}" type="currency" currencyCode="USD"/></p>
-              <p><a href="${pageContext.request.contextPath}/transactions/account/${account.id}">View Transactions</a></p> <!-- CORRECTED: Link to new servlet -->
+              <p><a href="${pageContext.request.contextPath}/transactions/account/${account.id}">View Transactions</a></p>
             </div>
           </c:forEach>
         </div>

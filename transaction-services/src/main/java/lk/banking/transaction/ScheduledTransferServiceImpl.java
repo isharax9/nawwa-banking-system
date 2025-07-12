@@ -56,4 +56,15 @@ public class ScheduledTransferServiceImpl implements ScheduledTransferService {
         transfer.setProcessed(true);
         // No need for em.merge(transfer) as 'transfer' is already a managed entity from em.find()
     }
+
+    @Override
+    public List<ScheduledTransfer> getAllScheduledTransfers() {
+        // Option 1 (Simple, if only showing non-processed or for admin):
+        // return em.createQuery("SELECT s FROM ScheduledTransfer s ORDER BY s.scheduledTime ASC", ScheduledTransfer.class)
+        //          .getResultList();
+
+        // Option 2 (If you want to fetch accounts eagerly for display in JSP):
+        return em.createQuery("SELECT s FROM ScheduledTransfer s JOIN FETCH s.fromAccount fa JOIN FETCH s.toAccount ta ORDER BY s.scheduledTime ASC", ScheduledTransfer.class)
+                .getResultList();
+    }
 }
