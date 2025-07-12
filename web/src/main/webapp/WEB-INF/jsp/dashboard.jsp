@@ -53,7 +53,7 @@
               <h3>Account: ${account.accountNumber}</h3>
               <p>Type: ${account.type}</p>
               <p>Balance: <fmt:formatNumber value="${account.balance}" type="currency" currencyCode="USD"/></p>
-              <p><a href="${pageContext.request.contextPath}/transactions/account/${account.id}">View Transactions</a></p>
+              <p><a href="${pageContext.request.contextPath}/transactions/account/${account.id}">View Transactions</a></p> <!-- CORRECTED: Link to new servlet -->
             </div>
           </c:forEach>
         </div>

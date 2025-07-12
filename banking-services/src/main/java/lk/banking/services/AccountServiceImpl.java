@@ -81,14 +81,7 @@ public class AccountServiceImpl implements AccountService {
         return account;
     }
 
-    @Override
-    public Account getAccountById(Long id) {
-        Account account = em.find(Account.class, id);
-        if (account == null) {
-            throw new AccountNotFoundException("Account with ID " + id + " not found.");
-        }
-        return account;
-    }
+
 
     @Override
     public Account getAccountByNumber(String accountNumber) {
@@ -169,5 +162,19 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public List<Account> getAllAccounts() {
         return em.createQuery("SELECT a FROM Account a WHERE a.isActive = TRUE", Account.class).getResultList();
+    }
+
+    // In lk.banking.services.AccountServiceImpl.java
+    @Override
+    public Account getAccountById(Long id) {
+        try {
+            // Option 1 (Recommended): Use JOIN FETCH to get customer eagerly
+            Account account = em.createQuery("SELECT a FROM Account a JOIN FETCH a.customer WHERE a.id = :id", Account.class)
+                    .setParameter("id", id)
+                    .getSingleResult();
+            return account;
+        } catch (jakarta.persistence.NoResultException e) {
+            throw new AccountNotFoundException("Account with ID " + id + " not found.");
+        }
     }
 }
