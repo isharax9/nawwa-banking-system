@@ -26,12 +26,9 @@
 </div>
 
 <div class="content-container">
-  <!-- Display flash messages (success/error from redirects) -->
   <c:if test="${not empty flashMessage}">
     <p class="flash-message ${flashMessageType}">${flashMessage}</p>
   </c:if>
-
-  <!-- Display immediate error messages (from POST-back or internal errors) -->
   <c:if test="${not empty errorMessage}">
     <p class="flash-message error">${errorMessage}</p>
   </c:if>
@@ -84,7 +81,7 @@
           <c:forEach var="tx" items="${recentTransactions}">
             <tr>
               <td>${tx.formattedTimestamp}</td>
-              <td>${tx.accountNumber}</td> <!-- CORRECTED: Use accountNumber directly -->
+              <td>${tx.accountNumber}</td>
               <td>${tx.type}</td>
               <td style="color: <c:if test='${tx.amount < 0}'>red</c:if><c:if test='${tx.amount > 0}'>green</c:if>;">
                 <fmt:formatNumber value="${tx.amount}" type="currency" currencyCode="USD"/>
