@@ -6,6 +6,7 @@
   Time: 6:00 PM
   To change this template use File | Settings | File Templates.
 --%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -16,9 +17,14 @@
 <div class="login-container">
     <h2>Login to Banking System</h2>
 
-    <!-- Display error messages if present -->
+    <!-- Display flash messages (success/error from redirects) -->
+    <c:if test="${not empty flashMessage}">
+        <p class="flash-message ${flashMessageType}">${flashMessage}</p>
+    </c:if>
+
+    <!-- Display immediate error messages (from POST-back) -->
     <c:if test="${not empty errorMessage}">
-        <p style="color: red;">${errorMessage}</p>
+        <p class="flash-message error">${errorMessage}</p>
     </c:if>
 
     <form action="${pageContext.request.contextPath}/login" method="post">

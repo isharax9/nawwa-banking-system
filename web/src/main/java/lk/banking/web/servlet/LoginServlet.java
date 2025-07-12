@@ -1,6 +1,6 @@
 package lk.banking.web.servlet;
 
-import jakarta.ejb.EJBException; // Import EJBException
+import jakarta.ejb.EJBException;
 import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -15,6 +15,7 @@ import lk.banking.core.exception.UnauthorizedAccessException;
 import lk.banking.core.mapper.LoggedInUserMapper;
 import lk.banking.security.AuthenticationService;
 import lk.banking.services.CustomerService;
+import lk.banking.web.util.FlashMessageUtil; // Import FlashMessageUtil
 
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -34,12 +35,11 @@ public class LoginServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         LOGGER.info("LoginServlet: Handling GET request to display login form.");
-        if ("true".equals(request.getParameter("registrationSuccess"))) {
-            request.setAttribute("successMessage", "Registration successful! You can now log in.");
-        }
-        if ("true".equals(request.getParameter("logoutSuccess"))) {
-            request.setAttribute("successMessage", "You have been successfully logged out.");
-        }
+
+        // Retrieve and clear any flash messages from session for display on this page
+        FlashMessageUtil.retrieveAndClearMessages(request);
+
+        // Forward to the login JSP page
         request.getRequestDispatcher("/WEB-INF/jsp/login.jsp").forward(request, response);
     }
 
@@ -83,21 +83,18 @@ public class LoginServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/dashboard");
 
         }
-        // IMPORTANT: Catch EJBException first, and then check its cause
         catch (EJBException e) {
-            Throwable cause = e.getCause(); // Get the underlying cause of the EJBException
+            Throwable cause = e.getCause();
             if (cause instanceof UnauthorizedAccessException) {
-                request.setAttribute("errorMessage", "Invalid username or password."); // User-friendly message
+                request.setAttribute("errorMessage", "Invalid username or password.");
                 LOGGER.warning("LoginServlet: Authentication failed for user '" + username + "': " + cause.getMessage());
                 doGet(request, response);
             } else {
-                // If it's another type of EJBException cause, treat as unexpected
                 LOGGER.log(java.util.logging.Level.SEVERE, "LoginServlet: An unexpected EJBException occurred during login for user '" + username + "'.", e);
                 request.setAttribute("errorMessage", "An unexpected error occurred during login. Please try again later.");
                 doGet(request, response);
             }
         }
-        // Catch any other exceptions that are not wrapped in EJBException (less common from EJB calls)
         catch (Exception e) {
             LOGGER.log(java.util.logging.Level.SEVERE, "LoginServlet: An unexpected non-EJB exception occurred during login for user '" + username + "'.", e);
             request.setAttribute("errorMessage", "An unexpected error occurred during login. Please try again later.");

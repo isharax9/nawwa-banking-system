@@ -15,7 +15,7 @@
         <a href="${pageContext.request.contextPath}/profile-edit">Edit Profile</a>
         <a href="${pageContext.request.contextPath}/transfer">Transfer Funds</a>
         <a href="${pageContext.request.contextPath}/deposit-withdrawal">Deposit/Withdraw</a>
-        <a href="${pageContext.request.contextPath}/logout">Logout</a>
+        <a href="${pageContext.request.contextPath}/logout?action=confirm">Logout</a>
     </div>
 </div>
 
@@ -23,7 +23,7 @@
     <h2>Create New Bank Account</h2>
 
     <c:if test="${not empty errorMessage}">
-        <p style="color: red;">${errorMessage}</p>
+        <p class="flash-message error">${errorMessage}</p>
     </c:if>
 
     <form action="${pageContext.request.contextPath}/account-create" method="post">

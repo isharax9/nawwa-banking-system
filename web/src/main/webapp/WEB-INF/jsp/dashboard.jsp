@@ -11,31 +11,32 @@
   <h1>Welcome, ${loggedInUser.username}!</h1>
   <div class="nav-links">
     <a href="${pageContext.request.contextPath}/dashboard">Dashboard</a>
-    <c:if test="${userRoles.contains('CUSTOMER')}">
+    <c:if test="${loggedInUser.hasRole('CUSTOMER')}">
       <a href="${pageContext.request.contextPath}/account-create">Create Account</a>
       <a href="${pageContext.request.contextPath}/profile-edit">Edit Profile</a>
       <a href="${pageContext.request.contextPath}/transfer">Transfer Funds</a>
       <a href="${pageContext.request.contextPath}/deposit-withdrawal">Deposit/Withdraw</a>
     </c:if>
-    <%-- Admin/Employee specific links --%>
-    <c:if test="${userRoles.contains('ADMIN') || userRoles.contains('EMPLOYEE')}">
+    <c:if test="${loggedInUser.hasRole('ADMIN') || loggedInUser.hasRole('EMPLOYEE')}">
       <a href="${pageContext.request.contextPath}/users/manage">Manage Users</a>
       <a href="${pageContext.request.contextPath}/customers/manage">Manage Customers</a>
-      <!-- More admin features -->
     </c:if>
-    <a href="${pageContext.request.contextPath}/logout">Logout</a>
+    <a href="${pageContext.request.contextPath}/logout?action=confirm">Logout</a>
   </div>
 </div>
 
 <div class="content-container">
-  <c:if test="${not empty errorMessage}">
-    <p style="color: red;">${errorMessage}</p>
-  </c:if>
-  <c:if test="${not empty successMessage}">
-    <p style="color: green;">${successMessage}</p>
+  <!-- Display flash messages (success/error from redirects) -->
+  <c:if test="${not empty flashMessage}">
+    <p class="flash-message ${flashMessageType}">${flashMessage}</p>
   </c:if>
 
-  <c:if test="${userRoles.contains('CUSTOMER')}">
+  <!-- Display immediate error messages (from POST-back or internal errors) -->
+  <c:if test="${not empty errorMessage}">
+    <p class="flash-message error">${errorMessage}</p>
+  </c:if>
+
+  <c:if test="${loggedInUser.hasRole('CUSTOMER')}">
     <c:if test="${not empty customer}">
       <h2>Hello, ${customer.name}!</h2>
       <p>Email: ${customer.email}</p>
@@ -101,10 +102,9 @@
     </c:choose>
   </c:if>
 
-  <c:if test="${userRoles.contains('ADMIN') || userRoles.contains('EMPLOYEE')}">
+  <c:if test="${loggedInUser.hasRole('ADMIN') || loggedInUser.hasRole('EMPLOYEE')}">
     <p>${message}</p>
     <h3>Admin/Employee Dashboard Features Coming Soon!</h3>
-    <!-- You can add more admin/employee specific reports or links here -->
   </c:if>
 
 </div>

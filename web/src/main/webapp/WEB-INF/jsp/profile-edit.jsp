@@ -1,10 +1,3 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: ishara
-  Date: 2025-07-12
-  Time: 9:48 PM
-  To change this template use File | Settings | File Templates.
---%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html>
@@ -21,7 +14,7 @@
         <a href="${pageContext.request.contextPath}/profile-edit">Edit Profile</a>
         <a href="${pageContext.request.contextPath}/transfer">Transfer Funds</a>
         <a href="${pageContext.request.contextPath}/deposit-withdrawal">Deposit/Withdraw</a>
-        <a href="${pageContext.request.contextPath}/logout">Logout</a>
+        <a href="${pageContext.request.contextPath}/logout?action=confirm">Logout</a>
     </div>
 </div>
 
@@ -29,20 +22,16 @@
     <h2>Edit Your Profile</h2>
 
     <c:if test="${not empty errorMessage}">
-        <p style="color: red;">${errorMessage}</p>
+        <p class="flash-message error">${errorMessage}</p>
     </c:if>
 
     <form action="${pageContext.request.contextPath}/profile-edit" method="post">
-        <!-- Hidden field for customer ID if needed, though we use email to fetch -->
-        <!-- <input type="hidden" name="customerId" value="${customer.id}"> -->
-
         <div>
             <label for="name">Full Name:</label>
             <input type="text" id="name" name="name" value="${customer.name}" required>
         </div>
         <div>
             <label for="email">Email (Not Editable):</label>
-            <!-- Display email, but make it read-only. This field is for display only. -->
             <input type="email" id="email" name="email" value="${customer.email}" readonly>
         </div>
         <div>

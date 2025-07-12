@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lk.banking.core.dto.AccountDto;
-import lk.banking.core.dto.LoggedInUser; // Change from UserDto to LoggedInUser
+import lk.banking.core.dto.LoggedInUser;
 import lk.banking.core.entity.Customer;
 import lk.banking.core.entity.enums.AccountType;
 import lk.banking.core.exception.CustomerNotFoundException;
@@ -15,6 +15,7 @@ import lk.banking.core.exception.DuplicateAccountException;
 import lk.banking.core.exception.ValidationException;
 import lk.banking.services.AccountService;
 import lk.banking.services.CustomerService;
+import lk.banking.web.util.FlashMessageUtil; // Import FlashMessageUtil
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -36,7 +37,7 @@ public class AccountCreationServlet extends HttpServlet {
             throws ServletException, IOException {
         LOGGER.info("AccountCreationServlet: Handling GET request to display account creation form.");
 
-        LoggedInUser loggedInUser = (LoggedInUser) request.getSession().getAttribute("loggedInUser"); // Cast to LoggedInUser
+        LoggedInUser loggedInUser = (LoggedInUser) request.getSession().getAttribute("loggedInUser");
         if (loggedInUser == null) {
             LOGGER.warning("AccountCreationServlet: No logged-in user found. Redirecting to login.");
             response.sendRedirect(request.getContextPath() + "/login");
@@ -53,7 +54,7 @@ public class AccountCreationServlet extends HttpServlet {
 
         LOGGER.info("AccountCreationServlet: Processing POST request for account creation.");
 
-        LoggedInUser loggedInUser = (LoggedInUser) request.getSession().getAttribute("loggedInUser"); // Cast to LoggedInUser
+        LoggedInUser loggedInUser = (LoggedInUser) request.getSession().getAttribute("loggedInUser");
         if (loggedInUser == null) {
             LOGGER.warning("AccountCreationServlet: No logged-in user found during POST. Redirecting to login.");
             response.sendRedirect(request.getContextPath() + "/login");
@@ -98,8 +99,6 @@ public class AccountCreationServlet extends HttpServlet {
         }
 
         try {
-            // Get the customer ID associated with the logged-in user's email
-            // Now, loggedInUser.getEmail() should be correctly populated.
             String userEmail = loggedInUser.getEmail();
             if (userEmail == null || userEmail.trim().isEmpty()) {
                 LOGGER.severe("AccountCreationServlet: LoggedInUser DTO for CUSTOMER role has null/empty email. Cannot create account.");
@@ -120,8 +119,8 @@ public class AccountCreationServlet extends HttpServlet {
             accountService.createAccount(accountDto);
 
             LOGGER.info("AccountCreationServlet: Account created successfully for customer ID " + customer.getId() + ".");
-            request.getSession().setAttribute("successMessage", "New account created successfully!");
-            response.sendRedirect(request.getContextPath() + "/dashboard");
+            FlashMessageUtil.putSuccessMessage(request.getSession(), "New account created successfully!"); // Use FlashMessageUtil
+            response.sendRedirect(request.getContextPath() + "/dashboard"); // No more URL params
 
         } catch (CustomerNotFoundException e) {
             LOGGER.log(java.util.logging.Level.WARNING, "AccountCreationServlet: Customer not found for user: " + loggedInUser.getUsername(), e);

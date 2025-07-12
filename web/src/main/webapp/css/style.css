@@ -122,3 +122,89 @@ button:hover {
     font-style: italic;
     color: #777;
 }
+
+/* Styles for logout confirmation dialog */
+
+.logout-confirm-container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 400px;
+    text-align: center;
+}
+
+.logout-confirm-container h2 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.logout-confirm-container p {
+    font-size: 1.1em;
+    color: #555;
+    margin-bottom: 30px;
+}
+
+.button-group {
+    margin-top: 20px;
+}
+
+.button-group .button {
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 1em;
+    margin: 0 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border: 1px solid transparent; /* For secondary button border */
+}
+
+.button-group .button-danger {
+    background-color: #dc3545; /* Red for logout */
+    color: white;
+}
+
+.button-group .button-danger:hover {
+    background-color: #c82333;
+}
+
+.button-group .button-secondary {
+    background-color: #f8f9fa; /* Light background for cancel */
+    color: #333;
+    border-color: #ccc;
+}
+
+.button-group .button-secondary:hover {
+    background-color: #e2e6ea;
+}
+
+/* Styles for error messages */
+
+.flash-message {
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    font-weight: bold;
+    text-align: center;
+    opacity: 1;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.flash-message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.flash-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.flash-message.info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
