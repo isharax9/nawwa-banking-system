@@ -15,6 +15,7 @@ public interface AccountService {
     List<Account> getAccountsByCustomer(Long customerId);
     Account updateAccount(AccountDto accountDto);
     void deleteAccount(Long id);
+    List<Account> getAllAccounts();
 
     // Specific method to find accounts linked to a user
     List<Account> findAccountsByUserId(Long id);

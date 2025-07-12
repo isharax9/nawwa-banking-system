@@ -165,4 +165,9 @@ public class AccountServiceImpl implements AccountService {
             return List.of();
         }
     }
+
+    @Override
+    public List<Account> getAllAccounts() {
+        return em.createQuery("SELECT a FROM Account a WHERE a.isActive = TRUE", Account.class).getResultList();
+    }
 }
