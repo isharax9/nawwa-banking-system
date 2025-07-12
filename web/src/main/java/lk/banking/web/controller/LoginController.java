@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
+import lk.banking.core.entity.Role;
 import lk.banking.core.entity.User;
 import lk.banking.core.dto.LoggedInUser; // Import the LoggedInUser DTO
 import lk.banking.core.exception.UnauthorizedAccessException; // Import for login failures
@@ -12,6 +13,8 @@ import lk.banking.security.AuthenticationService;
 import lk.banking.web.util.WebUtils;
 
 import java.io.Serializable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors; // Needed for mapping roles if using UserMapper.toDto directly
 
 @Named
@@ -43,7 +46,7 @@ public class LoginController implements Serializable {
                     authenticatedUser.getUsername(),
                     authenticatedUser.getEmail(), // Ensure email is available in User entity for customer lookup later
                     authenticatedUser.getRoles().stream()
-                            .map(r -> r.getName()) // Map Role entity to UserRole enum
+                            .map(Role::getName) // Map Role entity to UserRole enum
                             .collect(Collectors.toSet()),
                     // For customerId, you need a way to link User to Customer.
                     // If User has a direct customer ID/entity, retrieve it here.
@@ -67,8 +70,7 @@ public class LoginController implements Serializable {
             context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_FATAL,
                     "An unexpected error occurred during login. Please try again later.", null));
             System.err.println("Login error: " + e.getMessage()); // Log detailed error
-            e.printStackTrace(); // Print stack trace for debugging
-            return null;
+            Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, "Login error", e);            return null;
         }
     }
 
