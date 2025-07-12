@@ -3,25 +3,17 @@ package lk.banking.services.interceptor;
 import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.InvocationContext;
 import lk.banking.core.exception.UnauthorizedAccessException;
-// You might need to import classes related to your actual security context
-// For example:
-// import jakarta.security.enterprise.SecurityContext;
-// import jakarta.ejb.EJBContext;
-// import lk.banking.core.entity.User; // If you fetch User from a custom context
+import lk.banking.core.entity.enums.UserRole; // Import UserRole enum
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Logger; // Use java.util.logging
 
-/**
- * Interceptor for enforcing security and authorization checks on EJB methods.
- *
- * NOTE: For full security, this should be integrated with Jakarta Security API
- * (SecurityContext, @RolesAllowed) or EJBContext, and a proper authentication
- * mechanism. This provides a placeholder for programmatic checks.
- */
 public class SecurityInterceptor {
+
+    private static final Logger LOGGER = Logger.getLogger(SecurityInterceptor.class.getName());
 
     @AroundInvoke
     public Object secure(InvocationContext ctx) throws Exception {
@@ -29,56 +21,46 @@ public class SecurityInterceptor {
         String methodName = method.getName();
         String className = method.getDeclaringClass().getSimpleName();
 
-        System.out.println("[SECURITY] Intercepting: " + className + "." + methodName + "()");
+        LOGGER.info("[SECURITY] Intercepting: " + className + "." + methodName + "()");
 
         // --- CONCEPTUAL AUTHORIZATION LOGIC ---
-        // This is where your actual role/permission checks would go.
-        // You need a way to get the roles of the *currently authenticated user*.
+        // IMPORTANT: This 'simulateCurrentUserRoles' must be replaced by actual
+        // integration with your Jakarta Security context to retrieve the real roles
+        // of the currently authenticated user in a production environment.
+        Set<UserRole> currentUserRoles = simulateCurrentUserRoles(); // Replace with real logic from session/security context
 
-        // Placeholder for getting current user's roles.
-        // In a real Jakarta EE app, you'd use SecurityContext or EJBContext.
-        // For example:
-        // Set<String> currentUserRoles = getCurrentUserRolesFromSecurityContext();
-        Set<String> currentUserRoles = simulateCurrentUserRoles(); // Replace with real logic
-
-        // Example: Define required roles for specific methods/patterns
-        if (methodName.equals("deleteCustomer") || methodName.equals("deleteAccount") || methodName.equals("deleteUser")) {
-            if (!currentUserRoles.contains("ADMIN")) {
-                System.err.println("[SECURITY] DENIED: User is not ADMIN for " + methodName);
+        if (methodName.equals("deleteCustomer") || methodName.equals("deleteAccount") || methodName.equals("removeUser")) {
+            if (!(currentUserRoles.contains(UserRole.ADMIN))) { // Only ADMIN can delete
+                LOGGER.warning("[SECURITY] DENIED: User is not ADMIN for " + methodName);
                 throw new UnauthorizedAccessException("You are not authorized to perform " + methodName + " operations.");
             }
-        } else if (methodName.startsWith("create") || methodName.startsWith("update") || methodName.equals("transferFunds")) {
-            if (!(currentUserRoles.contains("ADMIN") || currentUserRoles.contains("EMPLOYEE"))) {
-                System.err.println("[SECURITY] DENIED: User is not ADMIN or EMPLOYEE for " + methodName);
+        } else if (methodName.startsWith("create") || methodName.startsWith("update") || methodName.equals("transferFunds") || methodName.equals("processPayment")) {
+            // Allow ADMIN, EMPLOYEE, OR CUSTOMER for create/update/transfer/payment operations
+            if (!(currentUserRoles.contains(UserRole.ADMIN) || currentUserRoles.contains(UserRole.EMPLOYEE) || currentUserRoles.contains(UserRole.CUSTOMER))) {
+                LOGGER.warning("[SECURITY] DENIED: User is not ADMIN, EMPLOYEE, or CUSTOMER for " + methodName);
                 throw new UnauthorizedAccessException("You are not authorized to perform " + methodName + " operations.");
             }
+            // For methods like createAccount by a CUSTOMER, you might want more fine-grained checks
+            // within the EJB itself (e.g., ensure the account is being created for *their* customer ID)
         }
-        // Add more specific rules as needed.
-        // E.g., a "CUSTOMER" might only be allowed to 'get' their own accounts/transactions.
-        // This would require checking method parameters (e.g., accountId matches user's owned accounts).
-        // This kind of fine-grained access control often becomes complex inside a generic interceptor
-        // and is sometimes better handled directly within the service method or by a dedicated
-        // authorization component.
+        // Add more specific rules as needed for other methods
 
-        System.out.println("[SECURITY] Access granted for: " + className + "." + methodName + "()");
-        return ctx.proceed(); // Proceed with the method invocation
+        LOGGER.info("[SECURITY] Access granted for: " + className + "." + methodName + "()");
+        return ctx.proceed();
     }
 
     // --- Placeholder for fetching real user roles ---
-    private Set<String> simulateCurrentUserRoles() {
+    // This method is the one you need to replace with actual production security context retrieval.
+    // For now, ensure it returns the role of the user you are currently testing with (e.g., CUSTOMER).
+    private Set<UserRole> simulateCurrentUserRoles() {
         // !!! IMPORTANT: REPLACE THIS WITH ACTUAL LOGIC TO GET ROLES FROM YOUR SECURITY CONTEXT !!!
-        // Example: From Jakarta Security's SecurityContext
-        // @Inject private SecurityContext securityContext;
-        // ...
-        // Set<String> roles = new HashSet<>();
-        // if (securityContext.isCallerInRole("ADMIN")) roles.add("ADMIN");
-        // if (securityContext.isCallerInRole("EMPLOYEE")) roles.add("EMPLOYEE");
-        // if (securityContext.isCallerInRole("CUSTOMER")) roles.add("CUSTOMER");
-        // return roles;
-
-        // For now, simulating for testing:
-        // return new HashSet<>(Arrays.asList("ADMIN")); // For testing ADMIN access
-        // return new HashSet<>(Arrays.asList("EMPLOYEE")); // For testing EMPLOYEE access
-        return new HashSet<>(Arrays.asList("CUSTOMER")); // For testing CUSTOMER access
+        // For example, if you have access to HttpServletRequest (which EJB Interceptors don't directly without a bridge):
+        // HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
+        // LoggedInUser loggedInUser = (LoggedInUser) request.getSession().getAttribute("loggedInUser");
+        // if (loggedInUser != null) {
+        //     return loggedInUser.getRoles();
+        // }
+        // For current testing with a customer user, ensure this returns CUSTOMER.
+        return new HashSet<>(Arrays.asList(UserRole.CUSTOMER)); // Temporarily hardcoded for CUSTOMER testing
     }
 }
