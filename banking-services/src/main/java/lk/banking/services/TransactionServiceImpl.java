@@ -202,9 +202,9 @@ public class TransactionServiceImpl implements TransactionServices {
         }
 
         // Get transactions for all these accounts
-        // Using IN clause for multiple account IDs
+        // MODIFY THIS QUERY: JOIN FETCH t.account
         return em.createQuery(
-                        "SELECT t FROM Transaction t WHERE t.account.id IN :accountIds ORDER BY t.timestamp DESC", Transaction.class)
+                        "SELECT t FROM Transaction t JOIN FETCH t.account a WHERE t.account.id IN :accountIds ORDER BY t.timestamp DESC", Transaction.class)
                 .setParameter("accountIds", accounts.stream().map(Account::getId).collect(Collectors.toList()))
                 .getResultList();
     }

@@ -15,7 +15,7 @@
       <a href="${pageContext.request.contextPath}/account-create">Create Account</a>
       <a href="${pageContext.request.contextPath}/profile-edit">Edit Profile</a>
       <a href="${pageContext.request.contextPath}/transfer">Transfer Funds</a>
-      <a href="${pageContext.request.contextPath}/deposit-withdrawal">Deposit/Withdraw</a>
+      <a href="${pageContext.request.contextPath}/deposit-withdraw">Deposit/Withdraw</a>
     </c:if>
     <c:if test="${loggedInUser.hasRole('ADMIN') || loggedInUser.hasRole('EMPLOYEE')}">
       <a href="${pageContext.request.contextPath}/users/manage">Manage Users</a>
@@ -83,8 +83,8 @@
           <tbody>
           <c:forEach var="tx" items="${recentTransactions}">
             <tr>
-              <td><fmt:formatDate value="${tx.timestamp}" pattern="yyyy-MM-dd HH:mm"/></td>
-              <td>${tx.account.accountNumber}</td>
+              <td>${tx.formattedTimestamp}</td>
+              <td>${tx.accountNumber}</td> <!-- CORRECTED: Use accountNumber directly -->
               <td>${tx.type}</td>
               <td style="color: <c:if test='${tx.amount < 0}'>red</c:if><c:if test='${tx.amount > 0}'>green</c:if>;">
                 <fmt:formatNumber value="${tx.amount}" type="currency" currencyCode="USD"/>

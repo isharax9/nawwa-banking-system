@@ -7,16 +7,18 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lk.banking.core.dto.LoggedInUser;
+import lk.banking.core.dto.TransactionDto; // Import TransactionDto
 import lk.banking.core.entity.Account;
 import lk.banking.core.entity.Customer;
 import lk.banking.core.entity.Transaction;
 import lk.banking.core.entity.enums.UserRole;
 import lk.banking.core.exception.CustomerNotFoundException;
 import lk.banking.core.exception.UserNotFoundException;
+import lk.banking.core.mapper.TransactionMapper; // Import TransactionMapper
 import lk.banking.services.AccountService;
 import lk.banking.services.CustomerService;
 import lk.banking.services.TransactionServices;
-import lk.banking.web.util.FlashMessageUtil; // Import FlashMessageUtil
+import lk.banking.web.util.FlashMessageUtil;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -54,12 +56,7 @@ public class DashboardServlet extends HttpServlet {
         request.setAttribute("loggedInUser", loggedInUser);
         request.setAttribute("userRoles", loggedInUser.getRoles().stream().map(Enum::name).collect(Collectors.toSet()));
 
-        // Retrieve and clear any flash messages from session for display on this page
         FlashMessageUtil.retrieveAndClearMessages(request);
-
-        // NOTE: errorMessage attribute might be set directly by servlets like LoginServlet on POST failure.
-        // It's still valid to use that for immediate error display without redirect.
-
 
         try {
             if (loggedInUser.hasRole(UserRole.CUSTOMER)) {
@@ -67,7 +64,7 @@ public class DashboardServlet extends HttpServlet {
 
                 Customer customer = null;
                 List<Account> accounts = Collections.emptyList();
-                List<Transaction> recentTransactions = Collections.emptyList();
+                List<TransactionDto> recentTransactions = Collections.emptyList(); // CHANGE: Declare as List<TransactionDto>
 
                 String userEmail = loggedInUser.getEmail();
                 if (userEmail == null || userEmail.trim().isEmpty()) {
@@ -86,9 +83,13 @@ public class DashboardServlet extends HttpServlet {
                             request.setAttribute("accounts", accounts);
                             LOGGER.info("DashboardServlet: Found " + accounts.size() + " accounts for customer ID: " + customer.getId());
 
-                            recentTransactions = transactionService.getTransactionsByUser(loggedInUser.getId());
+                            // CHANGE: Convert Transaction entities to TransactionDto
+                            List<Transaction> entityTransactions = transactionService.getTransactionsByUser(loggedInUser.getId());
+                            recentTransactions = entityTransactions.stream()
+                                    .map(TransactionMapper::toDto) // Use your TransactionMapper
+                                    .collect(Collectors.toList());
                             request.setAttribute("recentTransactions", recentTransactions);
-                            LOGGER.info("DashboardServlet: Found " + recentTransactions.size() + " recent transactions for user ID: " + loggedInUser.getId());
+                            LOGGER.info("DashboardServlet: Found " + recentTransactions.size() + " recent transactions for user ID: " + loggedInUser.getId() + " (as DTOs).");
                         }
                     } catch (CustomerNotFoundException e) {
                         LOGGER.log(java.util.logging.Level.WARNING, "DashboardServlet: CustomerNotFoundException for user " + loggedInUser.getUsername() + ".", e);
