@@ -54,12 +54,12 @@ body {
     border-radius: 8px;
     box-shadow: var(--shadow-md);
     width: 100%;
-    max-width: 500px; /* Max width for forms */
+    max-width: 1200px; /* Max width for forms */
     text-align: center;
 }
 
 .info-card {
-    max-width: 800px; /* Wider for dashboard content */
+    max-width: 1200px; /* Wider for dashboard content */
     text-align: left;
     padding: 30px;
 }
@@ -241,6 +241,7 @@ select.form-control {
 /* Tables */
 .data-table {
     width: 100%;
+    min-width: 1000px;
     border-collapse: collapse;
     margin-top: 25px;
     box-shadow: var(--shadow-sm);
@@ -423,4 +424,97 @@ select.form-control {
         margin-right: auto; /* Center horizontally */
     }
 
+    /* For action buttons in tables */
+    .action-buttons-group {
+        display: flex;
+        gap: 5px; /* Small gap between buttons */
+        flex-wrap: wrap; /* Allow wrapping on small screens */
+    }
+
+    .action-buttons-group .action-btn {
+        padding: 5px 10px; /* Smaller padding for small buttons */
+        font-size: 0.85rem;
+        flex-shrink: 0; /* Prevent buttons from shrinking */
+    }
+
+    /* For form inside table cell to display inline with other buttons */
+    .action-form {
+        display: inline-block;
+        margin: 0; /* Remove default form margins */
+        padding: 0;
+    }
+
+    /* For modal close button */
+
+    /* Modal Styles */
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1000; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        padding-top: 60px; /* Location of the modal content */
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto; /* 5% from the top and centered */
+        padding: 30px;
+        border: 1px solid #888;
+        width: 80%; /* Could be responsive */
+        max-width: 500px; /* Max width for consistency */
+        border-radius: 8px;
+        box-shadow: var(--shadow-md);
+        position: relative; /* For close button positioning */
+    }
+
+    .modal-content h3 {
+        text-align: center;
+        margin-bottom: 25px;
+        color: var(--dark-blue);
+    }
+
+    .close-button {
+        color: #aaa;
+        position: absolute;
+        top: 15px;
+        right: 25px;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .close-button:hover,
+    .close-button:focus {
+        color: #333;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    /* Collapsible Content Styling for smooth animation */
+    .collapsible-content {
+        overflow: hidden; /* Hide overflow during transition */
+        transition: height 0.3s ease-out, opacity 0.3s ease-out; /* Smooth transition for height and opacity */
+        height: 0; /* Initial hidden state for height */
+        opacity: 0; /* Initial hidden state for opacity */
+        padding-top: 0;
+        padding-bottom: 0;
+        margin-top: 0;
+        margin-bottom: 0; /* Remove padding/margin when collapsed */
+        pointer-events: none; /* Disable interaction when hidden */
+    }
+
+    /* When content is expanded, add back padding/margin if desired. */
+    /* The JS will set height and opacity dynamically. */
+    /* You might want to slightly adjust padding within the inner form-groups too if it looks off. */
+    .collapsible-content h3 {
+        margin-top: 20px; /* Adjust as needed */
+        margin-bottom: 15px; /* Adjust as needed */
+        border-bottom: 1px solid var(--medium-gray);
+        padding-bottom: 10px;
+    }
 }

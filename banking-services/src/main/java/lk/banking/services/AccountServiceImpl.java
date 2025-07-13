@@ -1,180 +1,265 @@
 package lk.banking.services;
 
 import jakarta.ejb.Stateless;
-import jakarta.inject.Inject; // Using Inject for potential future use or if you have a CDI setup
-import jakarta.interceptor.Interceptors;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import lk.banking.core.dto.AccountDto;
 import lk.banking.core.entity.Account;
 import lk.banking.core.entity.Customer;
-import lk.banking.core.entity.User; // Import User entity
+import lk.banking.core.entity.User;
+import lk.banking.core.entity.enums.AccountType; // For changeAccountType
 import lk.banking.core.exception.AccountNotFoundException;
-import lk.banking.core.exception.CustomerNotFoundException; // Import CustomerNotFoundException
-import lk.banking.core.exception.DuplicateAccountException; // Import if you want to handle collisions
-import lk.banking.core.exception.UserNotFoundException; // Assuming you'll add this exception in core.exception
+import lk.banking.core.exception.CustomerNotFoundException;
+import lk.banking.core.exception.DuplicateAccountException;
+import lk.banking.core.exception.InvalidTransactionException; // For deleteAccount validation
+import lk.banking.core.exception.UserNotFoundException;
+import lk.banking.core.exception.ValidationException; // For create/update/changeType validation
 import lk.banking.core.util.AccountNumberGenerator;
-import lk.banking.services.interceptor.AuditInterceptor;
-import lk.banking.services.interceptor.PerformanceMonitorInterceptor;
-import lk.banking.services.interceptor.SecurityInterceptor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.logging.Logger;
 
 @Stateless
-@Interceptors({AuditInterceptor.class, PerformanceMonitorInterceptor.class, SecurityInterceptor.class})
 public class AccountServiceImpl implements AccountService {
+
+    private static final Logger LOGGER = Logger.getLogger(AccountServiceImpl.class.getName());
 
     @PersistenceContext(unitName = "bankingPU")
     private EntityManager em;
 
-    // It's a good practice to inject services if they are stateless EJBs
-    // For simplicity, we'll keep direct EM usage for now, but for complex
-    // scenarios, you might inject CustomerService etc.
-
     @Override
     public Account createAccount(AccountDto accountDto) {
+        LOGGER.info("AccountServiceImpl: Creating account for customer ID: " + accountDto.getCustomerId());
         Customer customer = em.find(Customer.class, accountDto.getCustomerId());
         if (customer == null) {
-            // More semantically correct exception here
+            LOGGER.warning("AccountServiceImpl: Customer not found for ID: " + accountDto.getCustomerId());
             throw new CustomerNotFoundException("Customer with ID " + accountDto.getCustomerId() + " not found.");
         }
+
+        if (accountDto.getBalance() == null || accountDto.getBalance().compareTo(BigDecimal.ZERO) < 0) {
+            throw new ValidationException("Initial balance must be a positive or zero amount."); // Allow zero for certain account types
+        }
+        if (accountDto.getType() == null) {
+            throw new ValidationException("Account type is required.");
+        }
+
 
         String newAccountNumber;
         boolean unique = false;
         int attempts = 0;
-        final int MAX_ATTEMPTS = 5; // Prevent infinite loops in case of extreme collision
+        final int MAX_ATTEMPTS = 5;
 
         while (!unique && attempts < MAX_ATTEMPTS) {
             newAccountNumber = AccountNumberGenerator.generateAccountNumber();
             try {
-                // Check if account number already exists
-                em.createQuery("SELECT a FROM Account a WHERE a.accountNumber = :num", Account.class)
+                em.createQuery(
+                                "SELECT a FROM Account a WHERE a.accountNumber = :num", Account.class)
                         .setParameter("num", newAccountNumber)
-                        .getSingleResult(); // Will throw NoResultException if not found, or NonUniqueResultException if more than one (shouldn't happen with unique constraint)
-                // If we reach here, it means an account with this number exists
+                        .getSingleResult();
                 attempts++;
             } catch (NoResultException e) {
-                // Account number is unique, proceed
                 unique = true;
-                accountDto.setAccountNumber(newAccountNumber); // Set the generated account number in the DTO
+                accountDto.setAccountNumber(newAccountNumber);
             } catch (jakarta.persistence.NonUniqueResultException e) {
-                // This indicates a severe data integrity issue if accountNumber is unique
-                // Log this or throw a more critical exception if necessary
-                System.err.println("Database integrity error: Duplicate account number despite unique constraint: " + newAccountNumber);
+                LOGGER.severe("Database integrity error: Duplicate account number despite unique constraint: " + newAccountNumber);
                 throw new DuplicateAccountException("Failed to generate unique account number due to existing duplicates.");
             }
         }
 
         if (!unique) {
+            LOGGER.severe("Failed to generate a unique account number after " + MAX_ATTEMPTS + " attempts.");
             throw new DuplicateAccountException("Failed to generate a unique account number after " + MAX_ATTEMPTS + " attempts.");
         }
 
         Account account = new Account(
-                accountDto.getAccountNumber(), // Use the newly generated and validated unique account number
+                accountDto.getAccountNumber(),
                 accountDto.getType(),
                 accountDto.getBalance() != null ? accountDto.getBalance() : BigDecimal.ZERO,
                 customer
         );
         em.persist(account);
+        LOGGER.info("AccountServiceImpl: Account " + account.getAccountNumber() + " created for customer ID " + customer.getId());
         return account;
     }
 
-
+    @Override
+    public Account getAccountById(Long id) {
+        LOGGER.fine("AccountServiceImpl: Fetching account by ID: " + id);
+        try {
+            // Eagerly fetch customer to prevent LazyInitializationException in web layer
+            Account account = em.createQuery("SELECT a FROM Account a JOIN FETCH a.customer WHERE a.id = :id", Account.class)
+                    .setParameter("id", id)
+                    .getSingleResult();
+            return account;
+        } catch (NoResultException e) {
+            LOGGER.warning("AccountServiceImpl: Account with ID " + id + " not found.");
+            throw new AccountNotFoundException("Account with ID " + id + " not found.");
+        }
+    }
 
     @Override
     public Account getAccountByNumber(String accountNumber) {
+        LOGGER.fine("AccountServiceImpl: Fetching account by number: " + accountNumber);
         try {
+            // Eagerly fetch customer if needed by calling context
             return em.createQuery(
                             "SELECT a FROM Account a WHERE a.accountNumber = :num", Account.class)
                     .setParameter("num", accountNumber)
                     .getSingleResult();
         } catch (NoResultException e) {
+            LOGGER.warning("AccountServiceImpl: Account with number " + accountNumber + " not found.");
             throw new AccountNotFoundException("Account with number " + accountNumber + " not found.");
         }
     }
 
     @Override
     public List<Account> getAccountsByCustomer(Long customerId) {
+        LOGGER.fine("AccountServiceImpl: Fetching accounts for customer ID: " + customerId);
+        // Eagerly fetch customer for each account if needed
         return em.createQuery(
-                        "SELECT a FROM Account a WHERE a.customer.id = :cid", Account.class)
+                        "SELECT a FROM Account a JOIN FETCH a.customer WHERE a.customer.id = :cid", Account.class)
                 .setParameter("cid", customerId)
                 .getResultList();
     }
 
     @Override
+    public List<Account> getAllAccounts() {
+        LOGGER.fine("AccountServiceImpl: Fetching all accounts.");
+        // Eagerly fetch customer for each account if needed
+        return em.createQuery("SELECT a FROM Account a JOIN FETCH a.customer", Account.class).getResultList();
+    }
+
+    @Override
     public Account updateAccount(AccountDto accountDto) {
+        LOGGER.info("AccountServiceImpl: Updating account ID: " + accountDto.getId());
         Account account = em.find(Account.class, accountDto.getId());
         if (account == null) {
+            LOGGER.warning("AccountServiceImpl: Account with ID " + accountDto.getId() + " not found for update.");
             throw new AccountNotFoundException("Account with ID " + accountDto.getId() + " not found for update.");
         }
-        // Account number is typically immutable, so we don't update it from DTO
-        // Customer relationship is also typically immutable via this method
-        account.setType(accountDto.getType());
-        // Only update balance if provided and non-null, otherwise keep current balance
+        // Account number and Customer are typically immutable after creation
+        if (accountDto.getType() != null) {
+            account.setType(accountDto.getType());
+        }
         if (accountDto.getBalance() != null) {
+            // Be cautious: directly setting balance should usually only be for specific internal adjustments,
+            // not a general API for clients. Transactions should change balance.
             account.setBalance(accountDto.getBalance());
         }
-        em.merge(account); // No need to merge if the entity is managed. But harmless.
+        // No explicit merge needed for managed entity
+        LOGGER.info("AccountServiceImpl: Account " + account.getAccountNumber() + " updated.");
+        return account;
+    }
+
+    @Override
+    public boolean deactivateAccount(Long id) {
+        LOGGER.info("AccountServiceImpl: Deactivating account ID: " + id);
+        Account account = em.find(Account.class, id);
+        if (account == null) {
+            LOGGER.warning("AccountServiceImpl: Account with ID " + id + " not found for deactivation.");
+            throw new AccountNotFoundException("Account with ID " + id + " not found for deactivation.");
+        }
+        if (!account.getIsActive()) {
+            LOGGER.info("AccountServiceImpl: Account " + account.getAccountNumber() + " is already inactive.");
+            return true;
+        }
+        account.setIsActive(false);
+        LOGGER.info("AccountServiceImpl: Account " + account.getAccountNumber() + " deactivated.");
+        return true;
+    }
+
+    @Override
+    public boolean activateAccount(Long id) {
+        LOGGER.info("AccountServiceImpl: Activating account ID: " + id);
+        Account account = em.find(Account.class, id);
+        if (account == null) {
+            LOGGER.warning("AccountServiceImpl: Account with ID " + id + " not found for activation.");
+            throw new AccountNotFoundException("Account with ID " + id + " not found for activation.");
+        }
+        if (account.getIsActive()) {
+            LOGGER.info("AccountServiceImpl: Account " + account.getAccountNumber() + " is already active.");
+            return true;
+        }
+        account.setIsActive(true);
+        LOGGER.info("AccountServiceImpl: Account " + account.getAccountNumber() + " activated.");
+        return true;
+    }
+
+    @Override
+    public Account changeAccountType(Long id, AccountType newType) {
+        LOGGER.info("AccountServiceImpl: Changing type for account ID " + id + " to " + newType.name());
+        Account account = em.find(Account.class, id);
+        if (account == null) {
+            LOGGER.warning("AccountServiceImpl: Account with ID " + id + " not found for type change.");
+            throw new AccountNotFoundException("Account with ID " + id + " not found for type change.");
+        }
+        if (newType == null) {
+            throw new ValidationException("New account type cannot be null.");
+        }
+        if (account.getType() == newType) {
+            LOGGER.info("AccountServiceImpl: Account " + account.getAccountNumber() + " already has type " + newType.name());
+            return account; // No change needed
+        }
+
+        // Add business rules for conversion here if needed (e.g., cannot convert if balance is too high/low for new type)
+        // Example: Cannot convert a savings account with balance > 0 to a loan account
+        // if (account.getType() == AccountType.SAVINGS && newType == AccountType.LOAN && account.getBalance().compareTo(BigDecimal.ZERO) > 0) {
+        //     throw new InvalidTransactionException("Cannot convert non-zero savings account to loan account.");
+        // }
+
+        account.setType(newType);
+        LOGGER.info("AccountServiceImpl: Account " + account.getAccountNumber() + " type changed to " + newType.name());
         return account;
     }
 
     @Override
     public void deleteAccount(Long id) {
+        LOGGER.warning("AccountServiceImpl: Permanently deleting account ID: " + id + ". This action is irreversible.");
         Account account = em.find(Account.class, id);
         if (account == null) {
+            LOGGER.warning("AccountServiceImpl: Account with ID " + id + " not found for deletion.");
             throw new AccountNotFoundException("Account with ID " + id + " not found for deletion.");
         }
+
+        // IMPORTANT BUSINESS RULE: Prevent deletion if account has non-zero balance
+        if (account.getBalance().compareTo(BigDecimal.ZERO) != 0) {
+            LOGGER.warning("AccountServiceImpl: Attempt to delete account " + account.getAccountNumber() + " with non-zero balance.");
+            throw new InvalidTransactionException("Cannot delete account with non-zero balance. Balance must be zero.");
+        }
+
+        // Additional checks: Prevent deletion if account has active scheduled transfers or recent transactions
+        // Or handle cascading deletion of related entities if orphanRemoval is not sufficient or if you want to keep transactions.
+        // As per entity setup, transactions and scheduled transfers should orphan remove.
+
         em.remove(account);
+        LOGGER.info("AccountServiceImpl: Account " + account.getAccountNumber() + " permanently deleted.");
     }
 
     @Override
-    public List<Account> findAccountsByUserId(Long userId) {
-        User user = em.find(User.class, userId);
+    public List<Account> findAccountsByUserId(Long id) {
+        LOGGER.fine("AccountServiceImpl: Finding accounts for user ID: " + id);
+        User user = em.find(User.class, id);
         if (user == null) {
-            // Assuming you'll add UserNotFoundException to core.exception package
-            throw new UserNotFoundException("User with ID " + userId + " not found.");
+            LOGGER.warning("AccountServiceImpl: User with ID " + id + " not found while finding accounts.");
+            throw new UserNotFoundException("User with ID " + id + " not found.");
         }
 
-        // IMPORTANT: The User entity (as you shared it) does not have a direct
-        // relationship (e.g., @OneToOne Customer customer) to the Customer entity.
-        // To properly implement this, you should add a 'Customer customer' field
-        // and a @OneToOne/@JoinColumn to the User entity.
-
-        // As a workaround, we'll try to find a customer by email, assuming
-        // the user's email address is also the customer's email.
-        // This is a common pattern when direct foreign keys are not used,
-        // but it's less robust than a direct JPA relationship.
         try {
             Customer customer = em.createQuery(
                             "SELECT c FROM Customer c WHERE c.email = :email", Customer.class)
                     .setParameter("email", user.getEmail())
                     .getSingleResult();
-            return getAccountsByCustomer(customer.getId());
+            // Eagerly fetch customer for accounts if needed by calling context
+            return em.createQuery(
+                            "SELECT a FROM Account a JOIN FETCH a.customer WHERE a.customer.id = :customerId", Account.class)
+                    .setParameter("customerId", customer.getId())
+                    .getResultList();
         } catch (NoResultException e) {
-            // No customer found linked to this user's email
-            System.out.println("No customer found for user email: " + user.getEmail());
+            LOGGER.info("AccountServiceImpl: No customer found for user email: " + user.getEmail() + ". Returning empty account list.");
             return List.of();
-        }
-    }
-
-    @Override
-    public List<Account> getAllAccounts() {
-        return em.createQuery("SELECT a FROM Account a WHERE a.isActive = TRUE", Account.class).getResultList();
-    }
-
-    // In lk.banking.services.AccountServiceImpl.java
-    @Override
-    public Account getAccountById(Long id) {
-        try {
-            // Option 1 (Recommended): Use JOIN FETCH to get customer eagerly
-            Account account = em.createQuery("SELECT a FROM Account a JOIN FETCH a.customer WHERE a.id = :id", Account.class)
-                    .setParameter("id", id)
-                    .getSingleResult();
-            return account;
-        } catch (jakarta.persistence.NoResultException e) {
-            throw new AccountNotFoundException("Account with ID " + id + " not found.");
         }
     }
 }

@@ -7,7 +7,7 @@
 <div class="banking-form-container">
   <h2>Deposit / Withdraw Funds</h2>
 
-  <form action="${pageContext.request.contextPath}/deposit-withdrawal" method="post" class="banking-form">
+  <form action="${pageContext.request.contextPath}/deposit-withdraw" method="post" class="banking-form">
     <div class="form-group">
       <label for="accountId">Select Account:</label>
       <select id="accountId" name="accountId" class="form-control" required>

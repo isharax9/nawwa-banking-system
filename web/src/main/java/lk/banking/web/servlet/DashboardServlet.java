@@ -7,18 +7,21 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lk.banking.core.dto.LoggedInUser;
-import lk.banking.core.dto.TransactionDto; // Import TransactionDto
+import lk.banking.core.dto.AccountDto; // Import AccountDto
+import lk.banking.core.dto.TransactionDto;
 import lk.banking.core.entity.Account;
 import lk.banking.core.entity.Customer;
 import lk.banking.core.entity.Transaction;
 import lk.banking.core.entity.enums.UserRole;
 import lk.banking.core.exception.CustomerNotFoundException;
 import lk.banking.core.exception.UserNotFoundException;
-import lk.banking.core.mapper.TransactionMapper; // Import TransactionMapper
+import lk.banking.core.mapper.AccountMapper; // Import AccountMapper
+import lk.banking.core.mapper.TransactionMapper;
 import lk.banking.services.AccountService;
 import lk.banking.services.CustomerService;
 import lk.banking.services.TransactionServices;
 import lk.banking.web.util.FlashMessageUtil;
+import lk.banking.web.util.ServletUtil;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -63,8 +66,8 @@ public class DashboardServlet extends HttpServlet {
                 LOGGER.info("DashboardServlet: Loading data for CUSTOMER: " + loggedInUser.getUsername());
 
                 Customer customer = null;
-                List<Account> accounts = Collections.emptyList();
-                List<TransactionDto> recentTransactions = Collections.emptyList(); // CHANGE: Declare as List<TransactionDto>
+                List<AccountDto> accountDtos = Collections.emptyList(); // CHANGE: Declare as List<AccountDto>
+                List<TransactionDto> recentTransactions = Collections.emptyList();
 
                 String userEmail = loggedInUser.getEmail();
                 if (userEmail == null || userEmail.trim().isEmpty()) {
@@ -79,14 +82,17 @@ public class DashboardServlet extends HttpServlet {
                         } else {
                             request.setAttribute("customer", customer);
 
-                            accounts = accountService.getAccountsByCustomer(customer.getId());
-                            request.setAttribute("accounts", accounts);
-                            LOGGER.info("DashboardServlet: Found " + accounts.size() + " accounts for customer ID: " + customer.getId());
+                            // CHANGE: Convert Account entities to AccountDto
+                            List<Account> entityAccounts = accountService.getAccountsByCustomer(customer.getId());
+                            accountDtos = entityAccounts.stream()
+                                    .map(AccountMapper::toDto) // Use your AccountMapper
+                                    .collect(Collectors.toList());
+                            request.setAttribute("accounts", accountDtos); // Set the DTO list
+                            LOGGER.info("DashboardServlet: Found " + accountDtos.size() + " accounts for customer ID: " + customer.getId() + " (as DTOs).");
 
-                            // CHANGE: Convert Transaction entities to TransactionDto
                             List<Transaction> entityTransactions = transactionService.getTransactionsByUser(loggedInUser.getId());
                             recentTransactions = entityTransactions.stream()
-                                    .map(TransactionMapper::toDto) // Use your TransactionMapper
+                                    .map(TransactionMapper::toDto)
                                     .collect(Collectors.toList());
                             request.setAttribute("recentTransactions", recentTransactions);
                             LOGGER.info("DashboardServlet: Found " + recentTransactions.size() + " recent transactions for user ID: " + loggedInUser.getId() + " (as DTOs).");

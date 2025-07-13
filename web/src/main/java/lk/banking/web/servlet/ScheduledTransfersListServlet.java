@@ -8,19 +8,20 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lk.banking.core.dto.LoggedInUser;
-import lk.banking.core.entity.Account;
-import lk.banking.core.entity.ScheduledTransfer; // ScheduledTransfer entity
-import lk.banking.core.exception.BankingException; // For generic exception handling
-import lk.banking.transaction.ScheduledTransferService; // To get scheduled transfers
+import lk.banking.core.entity.ScheduledTransfer;
+import lk.banking.core.entity.Account; // Import Account for filtering
+import lk.banking.core.exception.BankingException;
+import lk.banking.transaction.ScheduledTransferService;
 import lk.banking.web.util.FlashMessageUtil;
-import lk.banking.web.util.ServletUtil;
+import lk.banking.web.util.ServletUtil; // Already imported
 
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
+import java.util.stream.Collectors; // For stream operations
 
 /**
  * Servlet for displaying a list of scheduled transfers for the logged-in user.
@@ -59,66 +60,71 @@ public class ScheduledTransfersListServlet extends HttpServlet {
         LoggedInUser loggedInUser = (LoggedInUser) request.getSession().getAttribute("loggedInUser");
         if (loggedInUser == null || !loggedInUser.hasRole(lk.banking.core.entity.enums.UserRole.CUSTOMER)) {
             LOGGER.warning("ScheduledTransfersListServlet: Unauthorized access. Redirecting to login.");
+            FlashMessageUtil.putErrorMessage(request.getSession(), "Access denied. You do not have permission to view scheduled transfers.");
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
+        FlashMessageUtil.retrieveAndClearMessages(request); // Retrieve flash messages on GET
+
         try {
             if (scheduledTransferService == null) {
-                LOGGER.severe("ScheduledTransfersListServlet: ScheduledTransferService is null. JNDI lookup failed.");
+                LOGGER.severe("ScheduledTransfersListServlet: ScheduledTransferService is null (should have been initialized).");
                 throw new ServletException("Service 'ScheduledTransferService' unavailable. Please try again later.");
             }
 
-            // Fetch scheduled transfers relevant to the logged-in user
-            // NOTE: Your ScheduledTransferService currently only has getPendingTransfers().
-            // You will need a method like getScheduledTransfersByCustomerId(Long customerId)
-            // or getScheduledTransfersByUserId(Long userId) in your ScheduledTransferService.
-            // For now, I'll assume a placeholder method and make a note to add it.
-
             List<ScheduledTransfer> scheduledTransfers = Collections.emptyList();
 
-            // Placeholder for fetching user-specific scheduled transfers
-            // For now, it will fetch ALL pending transfers (which is not secure for a customer-facing view)
-            // or you'll need to modify ScheduledTransferService
-            // For now, let's assume we implement getScheduledTransfersByUserId.
-            // This would require a relationship or a query to link User -> Customer -> Account -> ScheduledTransfer
-            // As a quick fix, let's fetch all and filter by the user's accounts. (less efficient but works for small scale)
+            // Re-evaluating the best approach to get user-specific scheduled transfers:
+            // The ideal is to have getScheduledTransfersByCustomerId(Long customerId) in ScheduledTransferService.
+            // If that is available, use it.
+            // If not, we have to filter locally, which means first getting all user accounts.
 
-            // OPTION A (Better, requires service modification):
-            // scheduledTransfers = scheduledTransferService.getScheduledTransfersByUserId(loggedInUser.getId());
+            // Get accounts for the logged-in user (customer role)
+            // Passing LOGGER to ServletUtil.getAccountsForLoggedInUser
+            List<Account> userAccounts = ServletUtil.getAccountsForLoggedInUser(request, response, loggedInUser, LOGGER);
 
-            // OPTION B (Workaround for now, relies on fetching all and filtering):
-            // This is NOT ideal for performance on large datasets.
-            // Get all accounts of the logged-in user to filter by
-            List<Account> userAccounts = lk.banking.web.util.ServletUtil.getAccountsForLoggedInUser(request, response, loggedInUser, null);
-            List<Long> userAccountIds = userAccounts.stream().map(Account::getId).collect(java.util.stream.Collectors.toList());
+            // If fetching accounts failed or no accounts, userAccounts will be empty.
+            if (userAccounts.isEmpty()) {
+                LOGGER.info("ScheduledTransfersListServlet: No accounts found for user " + loggedInUser.getUsername() + ", so no scheduled transfers.");
+                // No need to set error message if accounts are just empty, not an error state.
+            } else {
+                List<Long> userAccountIds = userAccounts.stream().map(Account::getId).collect(Collectors.toList());
 
-            if (!userAccountIds.isEmpty()) {
-                // Fetch all scheduled transfers and filter them by the user's accounts
-                List<ScheduledTransfer> allTransfers = scheduledTransferService.getAllScheduledTransfers(); // Assuming this method exists or you add it
+                // **** RECOMMENDED APPROACH (if ScheduledTransferService is updated) ****
+                // if (scheduledTransferService instanceof lk.banking.transaction.ScheduledTransferServiceImpl) { // Check if it's the actual implementation (if you add a custom method)
+                //      scheduledTransfers = ((lk.banking.transaction.ScheduledTransferServiceImpl) scheduledTransferService).getScheduledTransfersByCustomerId(loggedInUser.getCustomerId());
+                // } else {
+                //      LOGGER.warning("ScheduledTransfersListServlet: ScheduledTransferService does not have getScheduledTransfersByCustomerId. Falling back to less efficient filter.");
+                //      List<ScheduledTransfer> allTransfers = scheduledTransferService.getAllScheduledTransfers(); // This method exists now
+                //      scheduledTransfers = allTransfers.stream()
+                //              .filter(st -> userAccountIds.contains(st.getFromAccount().getId()) || userAccountIds.contains(st.getToAccount().getId()))
+                //              .collect(Collectors.toList());
+                // }
+
+                // **** CURRENT IMPLEMENTATION (using getAllScheduledTransfers() and filtering) ****
+                // Assumes getAllScheduledTransfers() is modified to JOIN FETCH accounts as discussed previously
+                List<ScheduledTransfer> allTransfers = scheduledTransferService.getAllScheduledTransfers();
                 scheduledTransfers = allTransfers.stream()
                         .filter(st -> userAccountIds.contains(st.getFromAccount().getId()) || userAccountIds.contains(st.getToAccount().getId()))
-                        .collect(java.util.stream.Collectors.toList());
+                        .collect(Collectors.toList());
             }
-
-            // OPTION C (If getPendingTransfers is all you have and want to show, but it's ALL pending, not user specific)
-            // scheduledTransfers = scheduledTransferService.getPendingTransfers();
-            // LOGGER.warning("ScheduledTransfersListServlet: Displaying ALL pending transfers, NOT user-specific. FIX ScheduledTransferService to filter by user.");
-
 
             request.setAttribute("scheduledTransfers", scheduledTransfers);
             LOGGER.info("ScheduledTransfersListServlet: Found " + scheduledTransfers.size() + " scheduled transfers for user " + loggedInUser.getUsername());
 
             request.getRequestDispatcher("/WEB-INF/jsp/scheduled-transfers.jsp").forward(request, response);
 
+        } catch (ServletException e) { // Catch ServletException from ServletUtil
+            LOGGER.log(java.util.logging.Level.SEVERE, "ScheduledTransfersListServlet: Critical ServletException propagating from ServletUtil.", e);
+            FlashMessageUtil.putErrorMessage(request.getSession(), "A critical service error occurred. Please try again later.");
+            response.sendRedirect(request.getContextPath() + "/dashboard");
         } catch (EJBException e) {
-            Exception unwrappedException = ServletUtil.unwrapEJBException(e);
-            String displayErrorMessage = "An error occurred while loading scheduled transfers. " + unwrappedException.getMessage();
-            LOGGER.log(java.util.logging.Level.SEVERE, "ScheduledTransfersListServlet: EJBException during scheduled transfers fetch for " + loggedInUser.getUsername(), unwrappedException);
+            String displayErrorMessage = ServletUtil.getRootErrorMessage(e, "An error occurred while loading scheduled transfers. Please try again later.", LOGGER);
             FlashMessageUtil.putErrorMessage(request.getSession(), displayErrorMessage);
             response.sendRedirect(request.getContextPath() + "/dashboard");
         } catch (Exception e) {
-            LOGGER.log(java.util.logging.Level.SEVERE, "ScheduledTransfersListServlet: Unexpected error during scheduled transfers fetch for " + loggedInUser.getUsername(), e);
+            LOGGER.log(java.util.logging.Level.SEVERE, "ScheduledTransfersListServlet: An unhandled general error occurred during scheduled transfers fetch for " + loggedInUser.getUsername(), e);
             FlashMessageUtil.putErrorMessage(request.getSession(), "An unexpected error occurred. Please try again later.");
             response.sendRedirect(request.getContextPath() + "/dashboard");
         }

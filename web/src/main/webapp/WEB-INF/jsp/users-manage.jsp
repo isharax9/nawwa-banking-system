@@ -9,12 +9,7 @@
   <h2>User Management</h2>
   <p class="text-muted">View and manage all system users. This feature is for administrators and employees.</p>
 
-  <c:if test="${not empty flashMessage}">
-    <p class="flash-message ${flashMessageType}">${flashMessage}</p>
-  </c:if>
-  <c:if test="${not empty errorMessage}">
-    <p class="flash-message error">${errorMessage}</p>
-  </c:if>
+
 
   <c:choose>
     <c:when test="${not empty users}">
@@ -47,16 +42,33 @@
                 <c:otherwise><span class="text-red">Inactive</span></c:otherwise>
               </c:choose>
             </td>
-            <td>${user.formattedCreatedAt}</td> <!-- CORRECTED: Use the new formatted getter -->
+            <td>${user.formattedCreatedAt}</td>
             <td>
-                <%-- Action links (will be implemented later) --%>
-              <a href="#" class="btn btn-sm btn-outline-primary">Edit</a>
-              <c:if test="${user.isActive == true}">
-                <a href="#" class="btn btn-sm btn-outline-secondary">Deactivate</a>
-              </c:if>
-              <c:if test="${user.isActive == false}">
-                <a href="#" class="btn btn-sm btn-outline-success">Activate</a>
-              </c:if>
+              <div class="action-buttons-group"> <%-- New div for button alignment --%>
+                  <%-- Edit button (placeholder) --%>
+                <a href="#" class="btn btn-sm btn-outline-primary action-btn">Edit</a>
+
+                  <%-- Deactivate/Activate form buttons --%>
+                <c:if test="${user.id != loggedInUser.id}"> <%-- Prevent self-deactivation --%>
+                  <c:if test="${user.isActive == true}">
+                    <form action="${pageContext.request.contextPath}/users/manage" method="post" class="action-form">
+                      <input type="hidden" name="userId" value="${user.id}">
+                      <input type="hidden" name="action" value="deactivate">
+                      <button type="submit" class="btn btn-sm btn-outline-danger action-btn" onclick="return confirm('Are you sure you want to deactivate user ${user.username}?');">Deactivate</button>
+                    </form>
+                  </c:if>
+                  <c:if test="${user.isActive == false}">
+                    <form action="${pageContext.request.contextPath}/users/manage" method="post" class="action-form">
+                      <input type="hidden" name="userId" value="${user.id}">
+                      <input type="hidden" name="action" value="activate">
+                      <button type="submit" class="btn btn-sm btn-outline-success action-btn" onclick="return confirm('Are you sure you want to activate user ${user.username}?');">Activate</button>
+                    </form>
+                  </c:if>
+                </c:if>
+                <c:if test="${user.id == loggedInUser.id}">
+                  <span class="text-muted">Self</span>
+                </c:if>
+              </div>
             </td>
           </tr>
         </c:forEach>

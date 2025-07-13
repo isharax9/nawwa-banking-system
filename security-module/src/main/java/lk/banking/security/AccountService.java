@@ -3,7 +3,6 @@ package lk.banking.services;
 import jakarta.ejb.Local;
 import lk.banking.core.dto.AccountDto;
 import lk.banking.core.entity.Account;
-import lk.banking.core.entity.enums.AccountType; // Import for changeAccountType
 
 import java.util.List;
 
@@ -15,7 +14,6 @@ public interface AccountService {
      * @return The newly created Account entity.
      * @throws lk.banking.core.exception.CustomerNotFoundException if the customer is not found.
      * @throws lk.banking.core.exception.DuplicateAccountException if the generated account number conflicts.
-     * @throws lk.banking.core.exception.ValidationException if initial balance is not positive.
      */
     Account createAccount(AccountDto accountDto);
 
@@ -46,51 +44,22 @@ public interface AccountService {
      * Retrieves all accounts in the system.
      * @return A list of all Account entities.
      */
-    List<Account> getAllAccounts();
+    List<Account> getAllAccounts(); // NEW METHOD
 
     /**
      * Updates an existing account's details.
      * @param accountDto DTO containing the updated account details (ID, type, balance).
      * @return The updated Account entity.
      * @throws lk.banking.core.exception.AccountNotFoundException if the account is not found.
-     * @throws lk.banking.core.exception.ValidationException if update data is invalid.
      */
     Account updateAccount(AccountDto accountDto);
 
     /**
-     * Deactivates an account by setting its isActive status to false (soft delete).
-     * @param id The ID of the account to deactivate.
-     * @return true if the account was deactivated or already inactive.
-     * @throws lk.banking.core.exception.AccountNotFoundException if the account is not found.
-     */
-    boolean deactivateAccount(Long id); // NEW METHOD
-
-    /**
-     * Activates an account by setting its isActive status to true.
-     * @param id The ID of the account to activate.
-     * @return true if the account was activated or already active.
-     * @throws lk.banking.core.exception.AccountNotFoundException if the account is not found.
-     */
-    boolean activateAccount(Long id); // NEW METHOD
-
-    /**
-     * Changes the type of an existing account (account conversion).
-     * @param id The ID of the account to change.
-     * @param newType The new AccountType.
-     * @return The updated Account entity.
-     * @throws lk.banking.core.exception.AccountNotFoundException if the account is not found.
-     * @throws lk.banking.core.exception.InvalidTransactionException if the new type is invalid for conversion or other business rules.
-     */
-    Account changeAccountType(Long id, AccountType newType); // NEW METHOD
-
-    /**
-     * Deletes an account permanently by its ID. This is a hard delete.
-     * Use with extreme caution, as it removes all associated data.
+     * Deletes an account by its ID. Note: In real systems, accounts are typically deactivated, not hard deleted.
      * @param id The ID of the account to delete.
      * @throws lk.banking.core.exception.AccountNotFoundException if the account is not found.
-     * @throws lk.banking.core.exception.InvalidTransactionException if deletion is not allowed (e.g., non-zero balance).
      */
-    void deleteAccount(Long id); // Existing, but added clarification on hard delete
+    void deleteAccount(Long id);
 
     /**
      * Finds accounts associated with a given user ID.

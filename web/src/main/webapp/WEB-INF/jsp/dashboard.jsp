@@ -4,9 +4,24 @@
 <%-- Set page title for _header.jspf --%>
 <c:set var="pageTitle" value="Dashboard" scope="request"/>
 
+
+
 <div class="info-card">
   <c:if test="${loggedInUser.hasRole('CUSTOMER')}">
     <c:if test="${not empty customer}">
+      <c:if test="${loggedInUser.hasRole('ADMIN') || loggedInUser.hasRole('EMPLOYEE')}">
+        <h2 class="mt-4">Admin/Employee Dashboard</h2>
+        <p class="lead">${message}</p>
+        <p class="text-muted">You have elevated privileges. Use the links below to manage the system.</p>
+        <%-- Example Admin Links --%>
+        <div class="btn-group my-4">
+          <a href="${pageContext.request.contextPath}/users/manage" class="btn btn-info">Manage Users</a>
+          <a href="${pageContext.request.contextPath}/customers/manage" class="btn btn-info">Manage Customers</a>
+          <a href="${pageContext.request.contextPath}/accounts/manage" class="btn btn-info">Manage Bank Accounts</a>
+            <%-- Add other admin/employee specific links here --%>
+        </div>
+      </c:if>
+
       <h2>Hello, ${customer.name}!</h2>
       <p><strong>Email:</strong> ${customer.email}</p>
       <p><strong>Address:</strong> ${customer.address}</p>
@@ -21,10 +36,12 @@
       <c:when test="${not empty accounts}">
         <div class="account-cards-grid">
           <c:forEach var="account" items="${accounts}">
+            <%-- In dashboard.jsp, within the account-card forEach loop --%>
             <div class="account-card">
               <h3>Account: ${account.accountNumber}</h3>
               <p><strong>Type:</strong> ${account.type}</p>
               <p><strong>Balance:</strong> <fmt:formatNumber value="${account.balance}" type="currency" currencyCode="USD"/></p>
+              <p><strong>Customer:</strong> ${account.customerName}</p> <!-- NEW: Display customer name -->
               <p class="text-right mt-3">
                 <a href="${pageContext.request.contextPath}/transactions/account/${account.id}" class="btn btn-sm btn-outline-primary">View Transactions</a>
               </p>
@@ -73,18 +90,7 @@
     </c:choose>
   </c:if>
 
-  <c:if test="${loggedInUser.hasRole('ADMIN') || loggedInUser.hasRole('EMPLOYEE')}">
-    <h2 class="mt-4">Admin/Employee Dashboard</h2>
-    <p class="lead">${message}</p>
-    <p class="text-muted">You have elevated privileges. Use the links below to manage the system.</p>
-    <%-- Example Admin Links --%>
-    <div class="btn-group my-4">
-      <a href="${pageContext.request.contextPath}/users/manage" class="btn btn-info">Manage Users</a>
-      <a href="${pageContext.request.contextPath}/customers/manage" class="btn btn-info">Manage Customers</a>
-      <a href="${pageContext.request.contextPath}/accounts/manage" class="btn btn-info">Manage Bank Accounts</a>
-        <%-- Add other admin/employee specific links here --%>
-    </div>
-  </c:if>
+
 
 </div>
 

@@ -9,12 +9,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lk.banking.core.entity.User;
 import lk.banking.core.entity.enums.UserRole;
-import lk.banking.core.exception.ResourceConflictException;
-import lk.banking.core.exception.RoleNotFoundException;
-import lk.banking.core.exception.ValidationException;
+// Removed specific exception imports
+// import lk.banking.core.exception.ResourceConflictException;
+// import lk.banking.core.exception.RoleNotFoundException;
+// import lk.banking.core.exception.ValidationException;
 import lk.banking.core.util.ValidationUtils;
 import lk.banking.security.UserManagementService;
-import lk.banking.web.util.FlashMessageUtil; // Import FlashMessageUtil
+import lk.banking.web.util.FlashMessageUtil;
+import lk.banking.web.util.ServletUtil; // Already imported
 
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -86,30 +88,12 @@ public class RegisterServlet extends HttpServlet {
             );
 
             LOGGER.info("RegisterServlet: User '" + username + "' registered successfully. Redirecting to login.");
-            FlashMessageUtil.putSuccessMessage(request.getSession(), "Registration successful! You can now log in."); // Use FlashMessageUtil
-            response.sendRedirect(request.getContextPath() + "/login"); // No more URL params
-        }
-        catch (EJBException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof ValidationException) {
-                request.setAttribute("errorMessage", cause.getMessage());
-                LOGGER.warning("RegisterServlet: Validation error for user '" + username + "': " + cause.getMessage());
-            } else if (cause instanceof ResourceConflictException) {
-                request.setAttribute("errorMessage", cause.getMessage());
-                LOGGER.warning("RegisterServlet: Conflict during registration for user '" + username + "': " + cause.getMessage());
-            } else if (cause instanceof RoleNotFoundException) {
-                request.setAttribute("errorMessage", "System error: Required user role not found. Please contact support.");
-                LOGGER.log(java.util.logging.Level.SEVERE, "RegisterServlet: Role not found during registration for '" + username + "'.", e);
-            } else {
-                LOGGER.log(java.util.logging.Level.SEVERE, "RegisterServlet: An unexpected EJBException occurred during registration for user '" + username + "'.", e);
-                request.setAttribute("errorMessage", "An unexpected error occurred during registration. Please try again later.");
-            }
-            request.setAttribute("param", request.getParameterMap());
-            doGet(request, response);
-        }
-        catch (Exception e) {
-            LOGGER.log(java.util.logging.Level.SEVERE, "RegisterServlet: An unexpected non-EJB exception occurred during registration for user '" + username + "'.", e);
-            request.setAttribute("errorMessage", "An unexpected error occurred during registration. Please try again later.");
+            FlashMessageUtil.putSuccessMessage(request.getSession(), "Registration successful! You can now log in.");
+            response.sendRedirect(request.getContextPath() + "/login");
+        } catch (Exception e) { // Catch generic Exception
+            // Use the new ServletUtil.getRootErrorMessage to handle all exceptions consistently
+            String displayErrorMessage = ServletUtil.getRootErrorMessage(e, "An unexpected error occurred during registration. Please try again later.", LOGGER);
+            request.setAttribute("errorMessage", displayErrorMessage);
             request.setAttribute("param", request.getParameterMap());
             doGet(request, response);
         }

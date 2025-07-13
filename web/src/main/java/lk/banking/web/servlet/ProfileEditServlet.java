@@ -10,11 +10,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import lk.banking.core.dto.LoggedInUser;
 import lk.banking.core.dto.CustomerDto;
 import lk.banking.core.entity.Customer;
+// Removed specific exception imports
+// import lk.banking.core.exception.CustomerNotFoundException;
+// import lk.banking.core.exception.ValidationException;
 import lk.banking.core.exception.CustomerNotFoundException;
-import lk.banking.core.exception.ValidationException;
 import lk.banking.core.util.ValidationUtils;
 import lk.banking.services.CustomerService;
-import lk.banking.web.util.FlashMessageUtil; // Import FlashMessageUtil
+import lk.banking.web.util.FlashMessageUtil;
+import lk.banking.web.util.ServletUtil; // Already imported
 
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -41,7 +44,6 @@ public class ProfileEditServlet extends HttpServlet {
 
         if (!loggedInUser.hasRole(lk.banking.core.entity.enums.UserRole.CUSTOMER)) {
             LOGGER.warning("ProfileEditServlet: Non-customer user (" + loggedInUser.getUsername() + ") attempted to access profile edit.");
-            // For unauthorized access, use FlashMessageUtil error message
             FlashMessageUtil.putErrorMessage(request.getSession(), "Access denied. Only customers can edit profiles.");
             response.sendRedirect(request.getContextPath() + "/dashboard");
             return;
@@ -59,14 +61,15 @@ public class ProfileEditServlet extends HttpServlet {
             request.setAttribute("customer", customer);
             request.getRequestDispatcher("/WEB-INF/jsp/profile-edit.jsp").forward(request, response);
 
-        } catch (CustomerNotFoundException e) {
-            LOGGER.log(java.util.logging.Level.WARNING, "ProfileEditServlet: Customer not found for user " + loggedInUser.getUsername() + ".", e);
-            request.setAttribute("errorMessage", e.getMessage());
-            request.getRequestDispatcher("/WEB-INF/jsp/dashboard.jsp").forward(request, response);
+        } catch (EJBException e) {
+            // Use the new ServletUtil to get the error message
+            String displayErrorMessage = ServletUtil.getRootErrorMessage(e, "Error loading profile data.", LOGGER);
+            FlashMessageUtil.putErrorMessage(request.getSession(), displayErrorMessage);
+            response.sendRedirect(request.getContextPath() + "/dashboard"); // Redirect on error
         } catch (Exception e) {
             LOGGER.log(java.util.logging.Level.SEVERE, "ProfileEditServlet: An unexpected error occurred while loading profile for user " + loggedInUser.getUsername() + ".", e);
-            request.setAttribute("errorMessage", "An unexpected error occurred. Please try again later.");
-            request.getRequestDispatcher("/WEB-INF/jsp/dashboard.jsp").forward(request, response);
+            FlashMessageUtil.putErrorMessage(request.getSession(), "An unexpected error occurred. Please try again later.");
+            response.sendRedirect(request.getContextPath() + "/dashboard");
         }
     }
 
@@ -109,9 +112,7 @@ public class ProfileEditServlet extends HttpServlet {
             LOGGER.warning("ProfileEditServlet: Validation error: " + errorMessage);
             try {
                 request.setAttribute("customer", customerService.getCustomerByEmail(loggedInUser.getEmail()));
-            } catch (CustomerNotFoundException ignore) {
-                LOGGER.severe("ProfileEditServlet: Customer not found while trying to re-populate form for " + loggedInUser.getEmail());
-            }
+            } catch (Exception ignore) { /* Logged by service */ }
             doGet(request, response);
             return;
         }
@@ -134,31 +135,15 @@ public class ProfileEditServlet extends HttpServlet {
             customerService.updateCustomer(customerDto);
 
             LOGGER.info("ProfileEditServlet: Customer profile updated successfully for user: " + loggedInUser.getUsername());
-            FlashMessageUtil.putSuccessMessage(request.getSession(), "Your profile has been updated successfully!"); // Use FlashMessageUtil
-            response.sendRedirect(request.getContextPath() + "/dashboard"); // No more URL params
+            FlashMessageUtil.putSuccessMessage(request.getSession(), "Your profile has been updated successfully!");
+            response.sendRedirect(request.getContextPath() + "/dashboard");
 
-        }
-        catch (EJBException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof ValidationException) {
-                LOGGER.log(java.util.logging.Level.WARNING, "ProfileEditServlet: Validation error during profile update for user: " + loggedInUser.getUsername() + ": " + cause.getMessage(), cause);
-                request.setAttribute("errorMessage", cause.getMessage());
-            } else if (cause instanceof CustomerNotFoundException) {
-                LOGGER.log(java.util.logging.Level.WARNING, "ProfileEditServlet: Customer not found during update for user: " + loggedInUser.getUsername() + ": " + cause.getMessage(), cause);
-                request.setAttribute("errorMessage", cause.getMessage());
-            } else {
-                LOGGER.log(java.util.logging.Level.SEVERE, "ProfileEditServlet: An unexpected EJBException occurred during profile update for user " + loggedInUser.getUsername() + ".", e);
-                request.setAttribute("errorMessage", "An unexpected error occurred during profile update. Please try again later.");
-            }
+        } catch (Exception e) { // Catch generic Exception
+            // Use the new ServletUtil.getRootErrorMessage to handle all exceptions consistently
+            String displayErrorMessage = ServletUtil.getRootErrorMessage(e, "An unexpected error occurred during profile update. Please try again later.", LOGGER);
+            request.setAttribute("errorMessage", displayErrorMessage);
             try { request.setAttribute("customer", customerService.getCustomerByEmail(loggedInUser.getEmail())); }
-            catch (CustomerNotFoundException ignore) { LOGGER.severe("Customer not found for re-populating after error in ProfileEditServlet doPost"); }
-            doGet(request, response);
-        }
-        catch (Exception e) {
-            LOGGER.log(java.util.logging.Level.SEVERE, "ProfileEditServlet: An unexpected non-EJB exception occurred during profile update for user " + loggedInUser.getUsername() + ".", e);
-            request.setAttribute("errorMessage", "An unexpected error occurred during profile update. Please try again later.");
-            try { request.setAttribute("customer", customerService.getCustomerByEmail(loggedInUser.getEmail())); }
-            catch (CustomerNotFoundException ignore) { LOGGER.severe("Customer not found for re-populating after unexpected error in ProfileEditServlet doPost"); }
+            catch (Exception ignore) { LOGGER.severe("Customer not found for re-populating after error in ProfileEditServlet doPost"); }
             doGet(request, response);
         }
     }
