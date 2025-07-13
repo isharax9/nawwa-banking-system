@@ -12,12 +12,9 @@ import lk.banking.core.dto.AccountDto; // To pass DTOs to JSP
 import lk.banking.core.entity.Account;     // For Account entity (before mapping)
 import lk.banking.core.entity.enums.AccountType; // For type conversion
 import lk.banking.core.entity.enums.UserRole; // For role checks
-import lk.banking.core.exception.AccountNotFoundException;
 import lk.banking.core.exception.BankingException;
-import lk.banking.core.exception.InvalidTransactionException; // For delete validation
-import lk.banking.core.exception.ValidationException; // For type conversion validation
 import lk.banking.core.mapper.AccountMapper; // For mapping entities to DTOs
-import lk.banking.services.AccountService; // To get all accounts and perform actions
+import lk.banking.services.AccountService;
 import lk.banking.web.util.FlashMessageUtil;
 import lk.banking.web.util.ServletUtil;
 

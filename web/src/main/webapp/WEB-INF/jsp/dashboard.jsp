@@ -84,6 +84,7 @@
       <a href="${pageContext.request.contextPath}/users/manage" class="btn btn-info">Manage Users</a>
       <a href="${pageContext.request.contextPath}/customers/manage" class="btn btn-info">Manage Customers</a>
       <a href="${pageContext.request.contextPath}/accounts/manage" class="btn btn-info">Manage Bank Accounts</a>
+      <a href="${pageContext.request.contextPath}/reports/daily" class="btn btn-info">Daily Reports</a> <!-- NEW LINK -->
     </div>
   </c:if>
 

@@ -21,7 +21,6 @@ import lk.banking.services.AccountService;
 import lk.banking.services.CustomerService;
 import lk.banking.services.TransactionServices;
 import lk.banking.web.util.FlashMessageUtil;
-import lk.banking.web.util.ServletUtil;
 
 import java.io.IOException;
 import java.util.Collections;

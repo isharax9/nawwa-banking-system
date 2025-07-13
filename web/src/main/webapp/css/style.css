@@ -517,4 +517,45 @@ select.form-control {
         border-bottom: 1px solid var(--medium-gray);
         padding-bottom: 10px;
     }
+
+    /* Button Group with flex for horizontal alignment within forms */
+    .btn-group-flex {
+        display: flex;
+        gap: 10px; /* Smaller gap for buttons that stay together */
+        justify-content: center; /* Center the group */
+        align-items: center;
+        margin-top: 20px;
+        flex-wrap: wrap; /* Allow wrapping on small screens */
+    }
+
+    .btn-group-flex .action-btn {
+        /* Inherits from .btn and .action-btn */
+        /* Add specific sizes if needed, e.g. width: auto; */
+    }
+
+    /* Report Section Styling */
+    .report-section {
+        background-color: #fcfcfc;
+        border: 1px solid var(--medium-gray);
+        border-radius: 6px;
+        padding: 20px;
+        margin-bottom: 25px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .report-section h4 {
+        color: var(--dark-blue);
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+    }
+
+    .report-section p {
+        margin-bottom: 10px;
+    }
+
+    .report-section .data-table {
+        margin-top: 15px; /* Adjust spacing for tables within report sections */
+    }
 }

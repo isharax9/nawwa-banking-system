@@ -11,17 +11,14 @@ import lk.banking.core.dto.LoggedInUser;
 import lk.banking.core.dto.TransactionDto; // To pass DTOs to JSP
 import lk.banking.core.entity.Account;     // To get account details
 import lk.banking.core.entity.Transaction; // For Transaction entity (before mapping)
-import lk.banking.core.exception.AccountNotFoundException;
 import lk.banking.core.exception.BankingException;
-import lk.banking.core.exception.UserNotFoundException; // Potentially from TransactionServices.getTransactionsByUser
 import lk.banking.core.mapper.TransactionMapper; // For mapping entities to DTOs
-import lk.banking.services.AccountService; // To get account details
+import lk.banking.services.AccountService;
 import lk.banking.services.TransactionServices; // To get transaction history
 import lk.banking.web.util.FlashMessageUtil; // For messages
 import lk.banking.web.util.ServletUtil;     // For unwrapping EJB exceptions
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;

@@ -1,6 +1,5 @@
 package lk.banking.web.util;
 
-import jakarta.ejb.EJB; // For @EJB if used internally, though JNDI is being used for services
 import jakarta.ejb.EJBException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,7 +8,7 @@ import lk.banking.core.dto.LoggedInUser;
 import lk.banking.core.entity.Account;
 import lk.banking.core.entity.Customer;
 import lk.banking.core.exception.*;
-import lk.banking.services.AccountService; // For AccountService lookup
+import lk.banking.services.AccountService;
 import lk.banking.services.CustomerService; // For CustomerService lookup
 
 import javax.naming.InitialContext;
