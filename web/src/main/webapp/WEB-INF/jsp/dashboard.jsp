@@ -21,10 +21,12 @@
       <c:when test="${not empty accounts}">
         <div class="account-cards-grid">
           <c:forEach var="account" items="${accounts}">
+            <%-- In dashboard.jsp, within the account-card forEach loop --%>
             <div class="account-card">
               <h3>Account: ${account.accountNumber}</h3>
               <p><strong>Type:</strong> ${account.type}</p>
               <p><strong>Balance:</strong> <fmt:formatNumber value="${account.balance}" type="currency" currencyCode="USD"/></p>
+              <p><strong>Customer:</strong> ${account.customerName}</p> <!-- NEW: Display customer name -->
               <p class="text-right mt-3">
                 <a href="${pageContext.request.contextPath}/transactions/account/${account.id}" class="btn btn-sm btn-outline-primary">View Transactions</a>
               </p>
