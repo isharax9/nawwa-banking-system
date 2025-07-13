@@ -1,18 +1,19 @@
 package lk.banking.security;
 
+import jakarta.annotation.security.PermitAll; // IMPORT THIS (for authenticating)
+import jakarta.annotation.security.RolesAllowed; // IMPORT THIS (for changePassword)
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import lk.banking.core.entity.User;
-import lk.banking.core.exception.UnauthorizedAccessException; // Import for login failures
-import lk.banking.core.exception.UserNotFoundException;       // Import for user not found cases
-import lk.banking.core.exception.ValidationException;         // Import for password policy validation
+import lk.banking.core.exception.UnauthorizedAccessException;
+import lk.banking.core.exception.UserNotFoundException;
+import lk.banking.core.exception.ValidationException;
 
 import java.util.logging.Logger;
 
 @Stateless
-@jakarta.ejb.TransactionAttribute(jakarta.ejb.TransactionAttributeType.SUPPORTS) // Default for class
 public class AuthenticationServiceImpl implements AuthenticationService {
 
     private static final Logger LOGGER = Logger.getLogger(AuthenticationServiceImpl.class.getName());
@@ -21,16 +22,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private EntityManager em;
 
     @Override
+    @PermitAll // Allow anyone (unauthenticated) to call authenticate (for login)
     public User authenticate(String username, String password) {
         try {
             User user = em.createQuery(
-                            "SELECT u FROM User u WHERE u.username = :username", User.class) // Don't check isActive here
+                            "SELECT u FROM User u WHERE u.username = :username", User.class)
                     .setParameter("username", username)
                     .getSingleResult();
 
-            if (!user.getIsActive()) { // Check isActive status AFTER finding user
+            if (!user.getIsActive()) {
                 LOGGER.warning("AuthenticationServiceImpl: User '" + username + "' is inactive/locked.");
-                // Provide the specific message for inactive users
                 throw new UnauthorizedAccessException("You're banned temporarily please contact support team 0372250045.");
             }
 
@@ -39,19 +40,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 return user;
             } else {
                 LOGGER.warning("AuthenticationServiceImpl: Invalid password for user '" + username + "'.");
-                throw new UnauthorizedAccessException("Invalid credentials provided."); // Generic message for security
+                throw new UnauthorizedAccessException("Invalid credentials provided.");
             }
         } catch (NoResultException e) {
             LOGGER.warning("AuthenticationServiceImpl: Username '" + username + "' not found.");
-            throw new UnauthorizedAccessException("Invalid credentials provided."); // Generic message for security
+            throw new UnauthorizedAccessException("Invalid credentials provided.");
         }
-        // Other PersistenceExceptions might occur if there's a serious database issue,
-        // which should ideally be handled by a broader exception mapper or caught at a higher level.
     }
 
     @Override
-    // This method writes to DB, so it requires a transaction. Overrides class-level SUPPORTS.
-    @jakarta.ejb.TransactionAttribute(jakarta.ejb.TransactionAttributeType.REQUIRED)
+    @RolesAllowed({"CUSTOMER", "EMPLOYEE", "ADMIN"}) // Only authenticated users can change their password
     public boolean changePassword(Long userId, String oldPassword, String newPassword) {
         LOGGER.info("AuthenticationServiceImpl: Attempting password change for user ID: " + userId);
         User user = em.find(User.class, userId);

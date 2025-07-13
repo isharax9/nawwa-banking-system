@@ -1,5 +1,6 @@
 package lk.banking.transaction;
 
+import jakarta.annotation.security.RolesAllowed; // IMPORT THIS
 import jakarta.ejb.Stateless;
 import jakarta.ejb.TransactionAttribute;
 import jakarta.persistence.EntityManager;
@@ -30,6 +31,7 @@ public class FundTransferServiceImpl implements FundTransferService {
     private EntityManager em;
 
     @Override
+    @RolesAllowed({"CUSTOMER", "EMPLOYEE", "ADMIN"}) // Customers can transfer, employees/admins can also initiate
     @TransactionAttribute(REQUIRED)
     public Transaction transferFunds(TransferRequestDto requestDto) {
         LOGGER.info("FundTransferService: Processing transfer from account ID: " + requestDto.getFromAccountId() + " to ID: " + requestDto.getToAccountId() + " amount: " + requestDto.getAmount());
@@ -60,7 +62,6 @@ public class FundTransferServiceImpl implements FundTransferService {
             throw new AccountNotFoundException("Destination account with ID " + requestDto.getToAccountId() + " not found.");
         }
 
-        // **** CRUCIAL CHANGE: Check if accounts are active ****
         if (!fromAccount.getIsActive()) {
             LOGGER.warning("FundTransferService: Transfer denied from inactive source account: " + fromAccount.getAccountNumber());
             throw new InvalidTransactionException("Transfer denied: Source account " + fromAccount.getAccountNumber() + " is inactive.");

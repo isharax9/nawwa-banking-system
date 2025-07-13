@@ -1,5 +1,6 @@
 package lk.banking.security;
 
+import jakarta.annotation.security.RolesAllowed; // IMPORT THIS
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
@@ -20,7 +21,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 @Stateless
-@jakarta.ejb.TransactionAttribute(jakarta.ejb.TransactionAttributeType.REQUIRED) // Default for class is transactional
 public class UserManagementServiceImpl implements UserManagementService {
 
     private static final Logger LOGGER = Logger.getLogger(UserManagementServiceImpl.class.getName());
@@ -29,6 +29,7 @@ public class UserManagementServiceImpl implements UserManagementService {
     private EntityManager em;
 
     @Override
+    @RolesAllowed({"CUSTOMER", "EMPLOYEE", "ADMIN"}) // Allow CUSTOMER for self-registration
     public User register(String username, String password, String email, String name, String address, String phoneNumber, UserRole role) {
         LOGGER.info("Attempting to register new user: " + username + " with email: " + email);
 
@@ -72,6 +73,7 @@ public class UserManagementServiceImpl implements UserManagementService {
             throw new ResourceConflictException("Email '" + email + "' is already registered with a customer profile.");
         } catch (NoResultException e) { }
 
+
         Role dbRole = null;
         try {
             dbRole = em.createQuery("SELECT r FROM Role r WHERE r.name = :name", Role.class)
@@ -107,7 +109,7 @@ public class UserManagementServiceImpl implements UserManagementService {
     }
 
     @Override
-    @jakarta.ejb.TransactionAttribute(jakarta.ejb.TransactionAttributeType.SUPPORTS)
+    @RolesAllowed({"ADMIN", "EMPLOYEE"}) // Read access for admins/employees
     public User getUserById(Long id) {
         LOGGER.fine("Fetching user by ID: " + id);
         User user = em.find(User.class, id);
@@ -119,6 +121,7 @@ public class UserManagementServiceImpl implements UserManagementService {
     }
 
     @Override
+    @RolesAllowed({"ADMIN", "EMPLOYEE"}) // Read access for admins/employees
     public User getUserByUsername(String username) {
         LOGGER.fine("Fetching user by username: " + username);
         try {
@@ -136,6 +139,7 @@ public class UserManagementServiceImpl implements UserManagementService {
     }
 
     @Override
+    @RolesAllowed({"ADMIN", "EMPLOYEE"}) // Read access for admins/employees
     public List<User> getAllUsers() {
         LOGGER.fine("Fetching all users.");
         return em.createQuery("SELECT u FROM User u", User.class)
@@ -143,9 +147,10 @@ public class UserManagementServiceImpl implements UserManagementService {
     }
 
     @Override
+    @RolesAllowed({"ADMIN"}) // Only ADMIN can assign roles (sensitive)
     public boolean assignRole(Long userId, UserRole role) {
         LOGGER.info("Assigning role " + role.name() + " to user ID: " + userId);
-        User user = getUserById(userId);
+        User user = getUserById(userId); // Throws UserNotFoundException if not found
 
         Role dbRole;
         try {
@@ -168,31 +173,30 @@ public class UserManagementServiceImpl implements UserManagementService {
     }
 
     @Override
+    @RolesAllowed({"ADMIN", "EMPLOYEE"}) // Employees can deactivate, but ADMIN should be able to do anything
     public boolean removeUser(Long userId) {
-        // Renamed method to be more explicit about soft deletion.
-        // If this were a hard delete, method name might be deleteUser.
         LOGGER.info("Attempting to deactivate user with ID: " + userId);
         User user = getUserById(userId); // Throws UserNotFoundException if not found
 
         if (!user.getIsActive()) {
             LOGGER.info("User with ID " + userId + " is already inactive.");
-            return true; // Idempotent: already inactive, so consider it success.
+            return true;
         }
 
-        user.setIsActive(false); // **** CRUCIAL CHANGE: Set isActive to false ****
-        // em.merge(user); // Not strictly needed for a managed entity
+        user.setIsActive(false);
         LOGGER.info("User with ID " + userId + " has been deactivated.");
         return true;
     }
 
-    // Optional: Add a method to activate a user
+    @Override
+    @RolesAllowed({"ADMIN", "EMPLOYEE"}) // Employees can activate
     public boolean activateUser(Long userId) {
         LOGGER.info("Attempting to activate user with ID: " + userId);
         User user = getUserById(userId); // Throws UserNotFoundException if not found
 
         if (user.getIsActive()) {
             LOGGER.info("User with ID " + userId + " is already active.");
-            return true; // Idempotent: already active, so consider it success.
+            return true;
         }
 
         user.setIsActive(true);
