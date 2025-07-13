@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 @Stateless
+@jakarta.ejb.TransactionAttribute(jakarta.ejb.TransactionAttributeType.REQUIRED) // Default for class is transactional
 public class UserManagementServiceImpl implements UserManagementService {
 
     private static final Logger LOGGER = Logger.getLogger(UserManagementServiceImpl.class.getName());
@@ -106,6 +107,7 @@ public class UserManagementServiceImpl implements UserManagementService {
     }
 
     @Override
+    @jakarta.ejb.TransactionAttribute(jakarta.ejb.TransactionAttributeType.SUPPORTS)
     public User getUserById(Long id) {
         LOGGER.fine("Fetching user by ID: " + id);
         User user = em.find(User.class, id);

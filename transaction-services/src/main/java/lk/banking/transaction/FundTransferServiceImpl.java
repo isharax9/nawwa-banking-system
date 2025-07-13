@@ -1,6 +1,7 @@
 package lk.banking.transaction;
 
 import jakarta.ejb.Stateless;
+import jakarta.ejb.TransactionAttribute;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
@@ -18,6 +19,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.logging.Logger;
 
+import static jakarta.ejb.TransactionAttributeType.REQUIRED;
+
 @Stateless
 public class FundTransferServiceImpl implements FundTransferService {
 
@@ -27,7 +30,7 @@ public class FundTransferServiceImpl implements FundTransferService {
     private EntityManager em;
 
     @Override
-    @Transactional
+    @TransactionAttribute(REQUIRED)
     public Transaction transferFunds(TransferRequestDto requestDto) {
         LOGGER.info("FundTransferService: Processing transfer from account ID: " + requestDto.getFromAccountId() + " to ID: " + requestDto.getToAccountId() + " amount: " + requestDto.getAmount());
 

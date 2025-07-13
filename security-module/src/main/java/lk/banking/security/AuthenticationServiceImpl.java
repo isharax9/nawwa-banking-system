@@ -12,6 +12,7 @@ import lk.banking.core.exception.ValidationException;         // Import for pass
 import java.util.logging.Logger;
 
 @Stateless
+@jakarta.ejb.TransactionAttribute(jakarta.ejb.TransactionAttributeType.SUPPORTS) // Default for class
 public class AuthenticationServiceImpl implements AuthenticationService {
 
     private static final Logger LOGGER = Logger.getLogger(AuthenticationServiceImpl.class.getName());
@@ -49,6 +50,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
+    // This method writes to DB, so it requires a transaction. Overrides class-level SUPPORTS.
+    @jakarta.ejb.TransactionAttribute(jakarta.ejb.TransactionAttributeType.REQUIRED)
     public boolean changePassword(Long userId, String oldPassword, String newPassword) {
         LOGGER.info("AuthenticationServiceImpl: Attempting password change for user ID: " + userId);
         User user = em.find(User.class, userId);
