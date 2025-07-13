@@ -7,8 +7,11 @@ import jakarta.persistence.PersistenceContext;
 import lk.banking.core.dto.AccountDto;
 import lk.banking.core.entity.Account;
 import lk.banking.core.entity.Customer;
+import lk.banking.core.entity.Transaction;
 import lk.banking.core.entity.User;
 import lk.banking.core.entity.enums.AccountType; // For changeAccountType
+import lk.banking.core.entity.enums.TransactionStatus;
+import lk.banking.core.entity.enums.TransactionType;
 import lk.banking.core.exception.AccountNotFoundException;
 import lk.banking.core.exception.CustomerNotFoundException;
 import lk.banking.core.exception.DuplicateAccountException;
@@ -18,7 +21,10 @@ import lk.banking.core.exception.ValidationException; // For create/update/chang
 import lk.banking.core.util.AccountNumberGenerator;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -29,6 +35,90 @@ public class AccountServiceImpl implements AccountService {
 
     @PersistenceContext(unitName = "bankingPU")
     private EntityManager em;
+
+    private static final MathContext MATH_CONTEXT = new MathContext(10, RoundingMode.HALF_UP); // Same as timer
+    private static final BigDecimal DAILY_INTEREST_RATE = BigDecimal.valueOf(0.00002); // Same as timer
+
+    @Override
+    public BigDecimal calculateAccruedInterest(Long accountId, LocalDateTime toDateTime) {
+        LOGGER.info("AccountServiceImpl: Calculating accrued interest for account ID: " + accountId + " up to " + toDateTime);
+        Account account = getAccountById(accountId); // Reusing existing method
+
+        if (account.getType() != AccountType.SAVINGS) {
+            throw new InvalidTransactionException("Interest can only be calculated for SAVINGS accounts.");
+        }
+        if (!account.getIsActive()) {
+            throw new InvalidTransactionException("Cannot calculate interest for inactive account " + account.getAccountNumber() + ".");
+        }
+        if (account.getBalance().compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO; // No interest on non-positive balance
+        }
+        if (toDateTime == null) {
+            toDateTime = LocalDateTime.now();
+        }
+        if (account.getLastInterestAppliedDate() == null) {
+            // If interest never applied, calculate from creation date
+            // Or from a predefined system start date for interest calculation if applicable
+            account.setLastInterestAppliedDate(account.getCreatedAt()); // Temporarily set for calc
+        }
+
+        LocalDateTime lastApplied = account.getLastInterestAppliedDate();
+
+        // Calculate full days passed since last application up to the toDateTime
+        long days = ChronoUnit.DAYS.between(lastApplied.toLocalDate(), toDateTime.toLocalDate());
+
+        if (days <= 0) {
+            LOGGER.info("AccountServiceImpl: No full days passed since last interest application for account " + account.getAccountNumber() + ". Accrued interest: 0.");
+            return BigDecimal.ZERO;
+        }
+
+        // Accrued interest calculation (simple or compounded, consistent with timer)
+        BigDecimal accruedInterest = BigDecimal.ZERO;
+        BigDecimal tempBalance = account.getBalance(); // Start with current balance for calculation
+
+        for (int i = 0; i < days; i++) {
+            BigDecimal dailyInterest = tempBalance.multiply(DAILY_INTEREST_RATE, MATH_CONTEXT);
+            accruedInterest = accruedInterest.add(dailyInterest);
+            tempBalance = tempBalance.add(dailyInterest); // Compounding daily
+        }
+
+        LOGGER.info("AccountServiceImpl: Calculated accrued interest of " + accruedInterest + " for account " + account.getAccountNumber() + " over " + days + " days.");
+        return accruedInterest.setScale(2, RoundingMode.HALF_UP); // Scale to 2 decimal places for currency
+    }
+
+    @Override
+    public Account applyAccruedInterest(Long accountId, BigDecimal interestAmount) {
+        LOGGER.info("AccountServiceImpl: Applying interest of " + interestAmount + " to account ID: " + accountId);
+        Account account = getAccountById(accountId); // Reusing existing method
+
+        if (account.getType() != AccountType.SAVINGS) {
+            throw new InvalidTransactionException("Interest can only be applied to SAVINGS accounts.");
+        }
+        if (!account.getIsActive()) {
+            throw new InvalidTransactionException("Cannot apply interest to inactive account " + account.getAccountNumber() + ".");
+        }
+        if (interestAmount == null || interestAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidTransactionException("Interest amount to apply must be positive.");
+        }
+
+        BigDecimal oldBalance = account.getBalance();
+        account.setBalance(oldBalance.add(interestAmount));
+        account.setLastInterestAppliedDate(LocalDateTime.now()); // Update last applied date after application
+
+        // Create a transaction record for this application
+        Transaction interestTransaction = new Transaction(
+                account,
+                interestAmount,
+                TransactionType.DEPOSIT, // Use DEPOSIT type for interest
+                TransactionStatus.COMPLETED,
+                LocalDateTime.now(),
+                "Customer applied accrued interest"
+        );
+        em.persist(interestTransaction);
+
+        LOGGER.info("AccountServiceImpl: Applied interest " + interestAmount + " to account " + account.getAccountNumber() + ". Balance changed from " + oldBalance + " to " + account.getBalance());
+        return account; // Return updated account
+    }
 
     @Override
     public Account createAccount(AccountDto accountDto) {
@@ -90,10 +180,9 @@ public class AccountServiceImpl implements AccountService {
         LOGGER.fine("AccountServiceImpl: Fetching account by ID: " + id);
         try {
             // Eagerly fetch customer to prevent LazyInitializationException in web layer
-            Account account = em.createQuery("SELECT a FROM Account a JOIN FETCH a.customer WHERE a.id = :id", Account.class)
+            return em.createQuery("SELECT a FROM Account a JOIN FETCH a.customer WHERE a.id = :id", Account.class)
                     .setParameter("id", id)
                     .getSingleResult();
-            return account;
         } catch (NoResultException e) {
             LOGGER.warning("AccountServiceImpl: Account with ID " + id + " not found.");
             throw new AccountNotFoundException("Account with ID " + id + " not found.");

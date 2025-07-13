@@ -46,6 +46,10 @@ public class Account implements Serializable {
     @Column(nullable = false)
     private Boolean isActive = true;
 
+    // NEW FIELD: To track when interest was last applied
+    @Column(nullable = true) // Can be null initially or for accounts not earning interest
+    private LocalDateTime lastInterestAppliedDate;
+
     // ---- Constructors ----
     public Account() {}
 
@@ -57,11 +61,17 @@ public class Account implements Serializable {
         this.isActive = true;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+        // lastInterestAppliedDate will be null initially for new accounts
+        // or explicitly set by interest calculation logic
     }
 
     @PrePersist
     protected void onCreate() {
         createdAt = updatedAt = LocalDateTime.now();
+        // For new SAVINGS accounts, set initial lastInterestAppliedDate to now
+        if (this.type == AccountType.SAVINGS) {
+            this.lastInterestAppliedDate = LocalDateTime.now();
+        }
     }
 
     @PreUpdate
@@ -86,6 +96,18 @@ public class Account implements Serializable {
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
 
+    // NEW: Getter and Setter for lastInterestAppliedDate
+    public LocalDateTime getLastInterestAppliedDate() { return lastInterestAppliedDate; }
+    public void setLastInterestAppliedDate(LocalDateTime lastInterestAppliedDate) { this.lastInterestAppliedDate = lastInterestAppliedDate; }
+
+    // NEW: Formatted getter for JSP display
+    public String getFormattedLastInterestAppliedDate() {
+        if (this.lastInterestAppliedDate == null) {
+            return "N/A"; // Or current date depending on interpretation
+        }
+        return this.lastInterestAppliedDate.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+    }
+
     // ---- equals & hashCode based on accountNumber ----
     @Override
     public boolean equals(Object o) {
@@ -108,6 +130,7 @@ public class Account implements Serializable {
                 ", type=" + type +
                 ", balance=" + balance +
                 ", isActive=" + isActive +
+                ", lastInterestAppliedDate=" + lastInterestAppliedDate +
                 '}';
     }
 }

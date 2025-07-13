@@ -22,6 +22,8 @@
                 <a href="${pageContext.request.contextPath}/transfer">Transfer Funds</a>
                 <a href="${pageContext.request.contextPath}/deposit-withdraw">Deposit/Withdraw</a>
                 <a href="${pageContext.request.contextPath}/scheduled-transfers">Scheduled Transfers</a>
+                <a href="${pageContext.request.contextPath}/interest-calculation">Interest Calculator</a>
+
             </c:if>
             <c:if test="${loggedInUser.hasRole('ADMIN') || loggedInUser.hasRole('EMPLOYEE')}">
                 <a href="${pageContext.request.contextPath}/users/manage">Manage Users</a>

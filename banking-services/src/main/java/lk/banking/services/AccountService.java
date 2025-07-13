@@ -5,6 +5,8 @@ import lk.banking.core.dto.AccountDto;
 import lk.banking.core.entity.Account;
 import lk.banking.core.entity.enums.AccountType; // Import for changeAccountType
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Local
@@ -100,4 +102,26 @@ public interface AccountService {
      * @throws lk.banking.core.exception.UserNotFoundException if the user is not found.
      */
     List<Account> findAccountsByUserId(Long id);
+
+    /**
+     * Calculates the interest accrued on a savings account since the last application date.
+     * This method does NOT apply the interest to the account balance.
+     * @param accountId The ID of the savings account.
+     * @param toDateTime The date/time up to which interest should be calculated (usually LocalDateTime.now()).
+     * @return The calculated accrued interest amount.
+     * @throws lk.banking.core.exception.AccountNotFoundException if the account is not found or is not a savings account.
+     * @throws lk.banking.core.exception.InvalidTransactionException if calculation is not applicable or input is invalid.
+     */
+    BigDecimal calculateAccruedInterest(Long accountId, LocalDateTime toDateTime); // NEW METHOD
+
+    /**
+     * Applies a given amount of accrued interest to a savings account and records a transaction.
+     * This method assumes the interest amount has already been calculated.
+     * @param accountId The ID of the account to apply interest to.
+     * @param interestAmount The amount of interest to apply.
+     * @return The updated Account entity.
+     * @throws lk.banking.core.exception.AccountNotFoundException if the account is not found or is not a savings account.
+     * @throws lk.banking.core.exception.InvalidTransactionException if application is not allowed (e.g., negative amount, account inactive).
+     */
+    Account applyAccruedInterest(Long accountId, BigDecimal interestAmount); // NEW METHOD
 }
