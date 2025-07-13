@@ -423,4 +423,24 @@ select.form-control {
         margin-right: auto; /* Center horizontally */
     }
 
+    /* For action buttons in tables */
+    .action-buttons-group {
+        display: flex;
+        gap: 5px; /* Small gap between buttons */
+        flex-wrap: wrap; /* Allow wrapping on small screens */
+    }
+
+    .action-buttons-group .action-btn {
+        padding: 5px 10px; /* Smaller padding for small buttons */
+        font-size: 0.85rem;
+        flex-shrink: 0; /* Prevent buttons from shrinking */
+    }
+
+    /* For form inside table cell to display inline with other buttons */
+    .action-form {
+        display: inline-block;
+        margin: 0; /* Remove default form margins */
+        padding: 0;
+    }
+
 }
