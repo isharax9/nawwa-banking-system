@@ -16,8 +16,9 @@
       <a href="${pageContext.request.contextPath}/profile-edit">Edit Profile</a>
       <a href="${pageContext.request.contextPath}/transfer">Transfer Funds</a>
       <a href="${pageContext.request.contextPath}/deposit-withdraw">Deposit/Withdraw</a>
-      <a href="${pageContext.request.contextPath}/scheduled-transfers">Scheduled Transfers</a> <!-- NEW LINK -->
+      <a href="${pageContext.request.contextPath}/scheduled-transfers">Scheduled Transfers</a>
     </c:if>
+    <a href="${pageContext.request.contextPath}/change-password">Change Password</a> <!-- NEW LINK -->
     <c:if test="${loggedInUser.hasRole('ADMIN') || loggedInUser.hasRole('EMPLOYEE')}">
       <a href="${pageContext.request.contextPath}/users/manage">Manage Users</a>
       <a href="${pageContext.request.contextPath}/customers/manage">Manage Customers</a>
