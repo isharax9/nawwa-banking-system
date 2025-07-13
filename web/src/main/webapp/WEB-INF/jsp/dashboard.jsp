@@ -1,4 +1,4 @@
-<%-- Main dashboard for authenticated users --%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ include file="/WEB-INF/jspf/_header.jspf" %>
 <%-- Set page title for _header.jspf --%>
@@ -76,11 +76,13 @@
   <c:if test="${loggedInUser.hasRole('ADMIN') || loggedInUser.hasRole('EMPLOYEE')}">
     <h2 class="mt-4">Admin/Employee Dashboard</h2>
     <p class="lead">${message}</p>
-    <p class="text-muted">More administrative features will be available here soon.</p>
+    <p class="text-muted">You have elevated privileges. Use the links below to manage the system.</p>
     <%-- Example Admin Links --%>
     <div class="btn-group my-4">
       <a href="${pageContext.request.contextPath}/users/manage" class="btn btn-info">Manage Users</a>
       <a href="${pageContext.request.contextPath}/customers/manage" class="btn btn-info">Manage Customers</a>
+      <a href="${pageContext.request.contextPath}/accounts/manage" class="btn btn-info">Manage Bank Accounts</a>
+        <%-- Add other admin/employee specific links here --%>
     </div>
   </c:if>
 

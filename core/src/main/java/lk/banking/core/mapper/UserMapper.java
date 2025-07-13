@@ -15,6 +15,8 @@ public class UserMapper {
 
     /**
      * Converts a User entity to a UserDto.
+     * @param entity The User entity.
+     * @return A UserDto, excluding sensitive information like password.
      */
     public static UserDto toDto(User entity) {
         if (entity == null) return null;
@@ -22,10 +24,17 @@ public class UserMapper {
                 ? entity.getRoles().stream()
                 .map(Role::getName)
                 .collect(Collectors.toSet())
-                : null;
+                : null; // Or new HashSet<>()
+
+        // Updated constructor call to include new fields
         return new UserDto(
                 entity.getId(),
                 entity.getUsername(),
+                entity.getEmail(), // NEW: Map email
+                entity.getPhone(), // NEW: Map phone
+                entity.getIsActive(), // NEW: Map isActive
+                entity.getCreatedAt(), // NEW: Map createdAt
+                entity.getUpdatedAt(), // NEW: Map updatedAt
                 roles
         );
     }
