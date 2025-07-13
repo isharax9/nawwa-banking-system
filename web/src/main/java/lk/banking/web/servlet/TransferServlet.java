@@ -10,18 +10,20 @@ import jakarta.servlet.http.HttpServletResponse;
 import lk.banking.core.dto.LoggedInUser;
 import lk.banking.core.dto.TransferRequestDto;
 import lk.banking.core.entity.Account;
+// Removed explicit imports for specific exceptions to show they are no longer needed here
+// import lk.banking.core.exception.AccountNotFoundException;
+// import lk.banking.core.exception.BankingException;
+// import lk.banking.core.exception.InsufficientFundsException;
+// import lk.banking.core.exception.InvalidTransactionException;
+// import lk.banking.core.exception.ScheduledTransferException;
+// import lk.banking.core.exception.ValidationException;
 import lk.banking.core.entity.ScheduledTransfer;
 import lk.banking.core.exception.AccountNotFoundException;
-import lk.banking.core.exception.BankingException;
-import lk.banking.core.exception.InsufficientFundsException;
-import lk.banking.core.exception.InvalidTransactionException;
-import lk.banking.core.exception.ScheduledTransferException;
-import lk.banking.core.exception.ValidationException;
 import lk.banking.services.AccountService;
 import lk.banking.transaction.ScheduledTransferService;
 import lk.banking.transaction.TransactionManager;
 import lk.banking.web.util.FlashMessageUtil;
-import lk.banking.web.util.ServletUtil;
+import lk.banking.web.util.ServletUtil; // Already imported
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -84,15 +86,14 @@ public class TransferServlet extends HttpServlet {
             request.setAttribute("accounts", accounts);
             LOGGER.info("TransferServlet: Loaded " + accounts.size() + " accounts for user " + loggedInUser.getUsername());
 
-            // NEW: Set the minimum date for the scheduledDate input to TODAY
             request.setAttribute("minScheduledDate", LocalDate.now().toString()); // Allow today for testing
 
             request.getRequestDispatcher("/WEB-INF/jsp/transfer.jsp").forward(request, response);
 
         } catch (EJBException e) {
-            Throwable cause = e.getCause();
-            LOGGER.log(java.util.logging.Level.SEVERE, "TransferServlet: EJBException while fetching accounts for " + loggedInUser.getUsername(), e);
-            request.setAttribute("errorMessage", "Error loading account data. " + (cause != null ? cause.getMessage() : ""));
+            // Use the new ServletUtil to get the error message
+            String displayErrorMessage = ServletUtil.getRootErrorMessage(e, "Error loading account data.", LOGGER);
+            request.setAttribute("errorMessage", displayErrorMessage);
             request.setAttribute("accounts", Collections.emptyList());
             request.getRequestDispatcher("/WEB-INF/jsp/transfer.jsp").forward(request, response);
         } catch (Exception e) {
@@ -165,13 +166,9 @@ public class TransferServlet extends HttpServlet {
                     LocalTime scheduledTime = LocalTime.parse(scheduledTimeStr);
                     scheduledDateTime = LocalDateTime.of(scheduledDate, scheduledTime);
 
-                    // TEMPORARY CHANGE FOR TESTING: Allow scheduling for current time or later
-                    if (scheduledDateTime.isBefore(LocalDateTime.now())) { // Check against current time
+                    if (scheduledDateTime.isBefore(LocalDateTime.now())) {
                         errorMessage = "Scheduled transfers must be set for the current time or later.";
                     }
-                    // ORIGINAL: if (scheduledDateTime.isBefore(LocalDateTime.now().plusDays(1).withHour(0).withMinute(0).withSecond(0).withNano(0))) {
-                    // ORIGINAL:    errorMessage = "Scheduled transfers must be set for tomorrow or later.";
-                    // ORIGINAL: }
                 } catch (DateTimeParseException e) {
                     errorMessage = "Invalid date or time format for scheduled transfer.";
                     LOGGER.warning("TransferServlet: DateTimeParse error: " + e.getMessage());
@@ -253,28 +250,9 @@ public class TransferServlet extends HttpServlet {
             FlashMessageUtil.putSuccessMessage(request.getSession(), successMessage);
             response.sendRedirect(request.getContextPath() + "/dashboard");
 
-        } catch (Exception e) {
-            Exception unwrappedException = ServletUtil.unwrapEJBException(e);
-
-            String displayErrorMessage;
-            if (unwrappedException instanceof BankingException) {
-                BankingException bankingCause = (BankingException) unwrappedException;
-                if (bankingCause instanceof AccountNotFoundException) {
-                    displayErrorMessage = "Account not found: " + bankingCause.getMessage();
-                } else if (bankingCause instanceof InsufficientFundsException) {
-                    displayErrorMessage = "Insufficient funds: " + bankingCause.getMessage();
-                } else if (bankingCause instanceof InvalidTransactionException || bankingCause instanceof ValidationException) {
-                    displayErrorMessage = "Invalid transfer: " + bankingCause.getMessage();
-                } else if (bankingCause instanceof ScheduledTransferException) {
-                    displayErrorMessage = "Scheduled transfer error: " + bankingCause.getMessage();
-                } else {
-                    displayErrorMessage = "A banking-related error occurred: " + bankingCause.getMessage();
-                }
-                LOGGER.log(java.util.logging.Level.WARNING, "TransferServlet: Banking error during transfer for user " + loggedInUser.getUsername() + ": " + displayErrorMessage, unwrappedException);
-            } else {
-                displayErrorMessage = "An unexpected error occurred. Please try again later.";
-                LOGGER.log(java.util.logging.Level.SEVERE, "TransferServlet: An unexpected error during transfer processing for user " + loggedInUser.getUsername(), unwrappedException);
-            }
+        } catch (Exception e) { // Catch generic Exception
+            // Use the new ServletUtil.getRootErrorMessage to handle all banking exceptions consistently
+            String displayErrorMessage = ServletUtil.getRootErrorMessage(e, "An unexpected error occurred. Please try again later.", LOGGER);
             request.setAttribute("errorMessage", displayErrorMessage);
             doGet(request, response);
         }

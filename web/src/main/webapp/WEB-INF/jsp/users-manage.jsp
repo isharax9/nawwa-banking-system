@@ -9,12 +9,7 @@
   <h2>User Management</h2>
   <p class="text-muted">View and manage all system users. This feature is for administrators and employees.</p>
 
-  <c:if test="${not empty flashMessage}">
-    <p class="flash-message ${flashMessageType}">${flashMessage}</p>
-  </c:if>
-  <c:if test="${not empty errorMessage}">
-    <p class="flash-message error">${errorMessage}</p>
-  </c:if>
+
 
   <c:choose>
     <c:when test="${not empty users}">

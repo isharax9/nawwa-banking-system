@@ -54,12 +54,12 @@ body {
     border-radius: 8px;
     box-shadow: var(--shadow-md);
     width: 100%;
-    max-width: 500px; /* Max width for forms */
+    max-width: 1200px; /* Max width for forms */
     text-align: center;
 }
 
 .info-card {
-    max-width: 800px; /* Wider for dashboard content */
+    max-width: 1200px; /* Wider for dashboard content */
     text-align: left;
     padding: 30px;
 }
@@ -241,6 +241,7 @@ select.form-control {
 /* Tables */
 .data-table {
     width: 100%;
+    min-width: 1000px;
     border-collapse: collapse;
     margin-top: 25px;
     box-shadow: var(--shadow-sm);
@@ -494,4 +495,26 @@ select.form-control {
         cursor: pointer;
     }
 
+    /* Collapsible Content Styling for smooth animation */
+    .collapsible-content {
+        overflow: hidden; /* Hide overflow during transition */
+        transition: height 0.3s ease-out, opacity 0.3s ease-out; /* Smooth transition for height and opacity */
+        height: 0; /* Initial hidden state for height */
+        opacity: 0; /* Initial hidden state for opacity */
+        padding-top: 0;
+        padding-bottom: 0;
+        margin-top: 0;
+        margin-bottom: 0; /* Remove padding/margin when collapsed */
+        pointer-events: none; /* Disable interaction when hidden */
+    }
+
+    /* When content is expanded, add back padding/margin if desired. */
+    /* The JS will set height and opacity dynamically. */
+    /* You might want to slightly adjust padding within the inner form-groups too if it looks off. */
+    .collapsible-content h3 {
+        margin-top: 20px; /* Adjust as needed */
+        margin-bottom: 15px; /* Adjust as needed */
+        border-bottom: 1px solid var(--medium-gray);
+        padding-bottom: 10px;
+    }
 }

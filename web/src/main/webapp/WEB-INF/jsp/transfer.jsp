@@ -1,58 +1,11 @@
+<%-- Fund transfer page (immediate or scheduled) --%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Transfer Funds</title>
-  <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/style.css">
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const scheduleCheckbox = document.getElementById('scheduleTransfer');
-      const scheduleFields = document.getElementById('scheduleFields');
-      const scheduledDateInput = document.getElementById('scheduledDate');
-      const scheduledTimeInput = document.getElementById('scheduledTime');
+<%@ include file="/WEB-INF/jspf/_header.jspf" %> <%-- CORRECT HEADER INCLUDE --%>
+<%-- Set page title for _header.jspf --%>
+<c:set var="pageTitle" value="Transfer Funds" scope="request"/>
 
-      function updateScheduleFields() {
-        if (scheduleCheckbox.checked) {
-          scheduleFields.style.display = 'block';
-          scheduledDateInput.setAttribute('required', 'required');
-          scheduledTimeInput.setAttribute('required', 'required');
-        } else {
-          scheduleFields.style.display = 'none';
-          scheduledDateInput.removeAttribute('required');
-          scheduledTimeInput.removeAttribute('required');
-          // Clear values when hiding to prevent accidental submission with old data
-          scheduledDateInput.value = '';
-          scheduledTimeInput.value = '';
-        }
-      }
-
-      // Set initial state based on server-side pre-filled param (if form was re-displayed due to error)
-      // Use param.scheduleTransfer to re-check the checkbox if there was a validation error
-      if ('${param.scheduleTransfer}' === 'on') {
-        scheduleCheckbox.checked = true;
-      }
-      updateScheduleFields(); // Call on load to set initial state
-
-      // Add event listener for changes
-      scheduleCheckbox.addEventListener('change', updateScheduleFields);
-    });
-  </script>
-</head>
-<body>
-<div class="header">
-  <h1>Welcome, ${loggedInUser.username}!</h1>
-  <div class="nav-links">
-    <a href="${pageContext.request.contextPath}/dashboard">Dashboard</a>
-    <a href="${pageContext.request.contextPath}/account-create">Create Account</a>
-    <a href="${pageContext.request.contextPath}/profile-edit">Edit Profile</a>
-    <a href="${pageContext.request.contextPath}/transfer">Transfer Funds</a>
-    <a href="${pageContext.request.contextPath}/deposit-withdrawal">Deposit/Withdraw</a>
-    <a href="${pageContext.request.contextPath}/logout?action=confirm">Logout</a>
-  </div>
-</div>
-
-<div class="content-container">
+<div class="banking-form-container"> <%-- This container is what we want inside main content area --%>
   <h2>Transfer Funds</h2>
 
   <c:if test="${not empty errorMessage}">
@@ -90,7 +43,7 @@
       <label class="form-check-label" for="scheduleTransfer">Schedule this transfer?</label>
     </div>
 
-    <div id="scheduleFields" style="display: none;">
+    <div id="scheduleFields" class="collapsible-content">
       <h3>Schedule Details</h3>
       <div class="form-group">
         <label for="scheduledDate">Scheduled Date:</label>
@@ -104,14 +57,55 @@
       </div>
     </div>
 
-    <div class="form-group text-center"> <!-- New form-group for the button -->
+    <div class="form-group text-center"> <%-- Use text-center to center the button --%>
       <button type="submit" class="btn btn-primary form-button-fixed-width mb-3" <c:if test="${empty accounts}">disabled</c:if>>Process Transfer</button>
     </div>
 
-    <div class="form-group text-center"> <!-- New form-group for the back link -->
+    <div class="form-group text-center"> <%-- Use text-center for the back link --%>
       <a href="${pageContext.request.contextPath}/dashboard" class="btn btn-secondary form-button-fixed-width">Back to Dashboard</a>
     </div>
   </form>
-</div>
-</body>
-</html>
+</div> <%-- END banking-form-container --%>
+
+<script>
+  // Include the JavaScript directly in the JSP or move to a separate JS file
+  document.addEventListener('DOMContentLoaded', function() {
+    const scheduleCheckbox = document.getElementById('scheduleTransfer');
+    const scheduleFields = document.getElementById('scheduleFields');
+    const scheduledDateInput = document.getElementById('scheduledDate');
+    const scheduledTimeInput = document.getElementById('scheduledTime');
+
+    function toggleScheduleFields(show) {
+      if (show) {
+        scheduleFields.style.height = scheduleFields.scrollHeight + 'px';
+        scheduleFields.style.opacity = '1';
+        scheduleFields.style.pointerEvents = 'auto';
+        scheduledDateInput.setAttribute('required', 'required');
+        scheduledTimeInput.setAttribute('required', 'required');
+      } else {
+        scheduleFields.style.height = '0';
+        scheduleFields.style.opacity = '0';
+        scheduleFields.style.pointerEvents = 'none';
+        scheduledDateInput.value = '';
+        scheduledTimeInput.value = '';
+      }
+    }
+
+    const initialScheduleChecked = '${param.scheduleTransfer}' === 'on';
+    scheduleCheckbox.checked = initialScheduleChecked;
+    toggleScheduleFields(initialScheduleChecked);
+
+    scheduleCheckbox.addEventListener('change', function() {
+      toggleScheduleFields(this.checked);
+    });
+
+    window.addEventListener('resize', function() {
+      if (scheduleCheckbox.checked) {
+        scheduleFields.style.height = 'auto';
+        scheduleFields.style.height = scheduleFields.scrollHeight + 'px';
+      }
+    });
+  });
+</script>
+
+<%@ include file="/WEB-INF/jspf/_footer.jspf" %> <%-- CORRECT FOOTER INCLUDE --%>

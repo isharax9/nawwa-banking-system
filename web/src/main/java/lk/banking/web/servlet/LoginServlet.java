@@ -16,7 +16,7 @@ import lk.banking.core.mapper.LoggedInUserMapper;
 import lk.banking.security.AuthenticationService;
 import lk.banking.services.CustomerService;
 import lk.banking.web.util.FlashMessageUtil;
-import lk.banking.web.util.ServletUtil; // For unwrapping EJBException
+import lk.banking.web.util.ServletUtil; // Already imported
 
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -81,29 +81,10 @@ public class LoginServlet extends HttpServlet {
             LOGGER.info("LoginServlet: User '" + username + "' authenticated successfully. Redirecting to dashboard.");
             response.sendRedirect(request.getContextPath() + "/dashboard");
 
-        }
-        catch (EJBException e) {
-            Exception unwrappedException = ServletUtil.unwrapEJBException(e);
-            String displayErrorMessage;
-
-            if (unwrappedException instanceof UnauthorizedAccessException) {
-                // Check for the specific message from AuthenticationService for inactive users
-                if ("You're banned temporarily please contact support team 0372250045.".equals(unwrappedException.getMessage())) {
-                    displayErrorMessage = unwrappedException.getMessage(); // Use the exact message
-                } else {
-                    displayErrorMessage = "Invalid username or password."; // Generic for security
-                }
-                LOGGER.warning("LoginServlet: Authentication failed for user '" + username + "': " + unwrappedException.getMessage());
-            } else {
-                LOGGER.log(java.util.logging.Level.SEVERE, "LoginServlet: An unexpected EJBException occurred during login for user '" + username + "'.", e);
-                displayErrorMessage = "An unexpected error occurred during login. Please try again later.";
-            }
+        } catch (Exception e) { // Catch generic Exception
+            // Use the new ServletUtil.getRootErrorMessage to handle all exceptions consistently
+            String displayErrorMessage = ServletUtil.getRootErrorMessage(e, "An unexpected error occurred during login. Please try again later.", LOGGER);
             request.setAttribute("errorMessage", displayErrorMessage);
-            doGet(request, response);
-        }
-        catch (Exception e) {
-            LOGGER.log(java.util.logging.Level.SEVERE, "LoginServlet: An unexpected non-EJB exception occurred during login for user '" + username + "'.", e);
-            request.setAttribute("errorMessage", "An unexpected error occurred during login. Please try again later.");
             doGet(request, response);
         }
     }

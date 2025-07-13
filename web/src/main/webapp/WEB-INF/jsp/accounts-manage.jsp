@@ -9,12 +9,6 @@
   <h2>Bank Account Management</h2>
   <p class="text-muted">View and manage all bank accounts in the system. This feature is for administrators and employees.</p>
 
-  <c:if test="${not empty flashMessage}">
-    <p class="flash-message ${flashMessageType}">${flashMessage}</p>
-  </c:if>
-  <c:if test="${not empty errorMessage}">
-    <p class="flash-message error">${errorMessage}</p>
-  </c:if>
 
   <c:choose>
     <c:when test="${not empty accounts}">
