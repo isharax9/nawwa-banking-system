@@ -1,0 +1,37 @@
+<%-- This fragment includes the common footer for all pages --%>
+</main> <%-- Close main-content-area --%>
+</div> <%-- Close content-wrapper --%>
+
+<footer class="footer" style="background-color: #1a1a1a; color: white; text-align: center; padding: 30px;">
+    <div class="footer-bottom">
+        <!-- Social Media Icons -->
+        <div class="social-links" style="margin-bottom: 15px;">
+            <a href="https://github.com/isharax9 " class="social-link" target="_blank" rel="noopener noreferrer"
+               style="color: white; font-size: 24px; margin: 0 10px; text-decoration: none; transition: color 0.3s ease;">
+                <i class="fab fa-github"></i>
+            </a>
+            <a href="https://linkedin.com/in/isharax9 " class="social-link" target="_blank" rel="noopener noreferrer"
+               style="color: white; font-size: 24px; margin: 0 10px; text-decoration: none; transition: color 0.3s ease;">
+                <i class="fab fa-linkedin"></i>
+            </a>
+            <a href="https://twitter.com/isharax9 " class="social-link" target="_blank" rel="noopener noreferrer"
+               style="color: white; font-size: 24px; margin: 0 10px; text-decoration: none; transition: color 0.3s ease;">
+                <i class="fab fa-twitter"></i>
+            </a>
+        </div>
+
+        <!-- Copyright Text -->
+        <p style="margin: 8px 0; font-size: 16px;">
+            &copy; 2025 <strong>Ishara Lakshitha (@isharax9)</strong>. All rights reserved.
+        </p>
+        <p style="margin: 0; font-size: 14px; color: #bbbbbb;">
+            Business Component Development 2 - Final Year Project | Enterprise Java Technologies
+        </p>
+    </div>
+</footer>
+
+<!-- Load Font Awesome CDN for social media icons -->
+<script src="https://kit.fontawesome.com/a0b8b7c62f.js " crossorigin="anonymous"></script>
+
+</body>
+</html>

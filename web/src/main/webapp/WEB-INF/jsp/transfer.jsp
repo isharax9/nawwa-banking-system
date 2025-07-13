@@ -21,16 +21,20 @@
           scheduleFields.style.display = 'none';
           scheduledDateInput.removeAttribute('required');
           scheduledTimeInput.removeAttribute('required');
+          // Clear values when hiding to prevent accidental submission with old data
           scheduledDateInput.value = '';
           scheduledTimeInput.value = '';
         }
       }
 
+      // Set initial state based on server-side pre-filled param (if form was re-displayed due to error)
+      // Use param.scheduleTransfer to re-check the checkbox if there was a validation error
       if ('${param.scheduleTransfer}' === 'on') {
         scheduleCheckbox.checked = true;
       }
-      updateScheduleFields();
+      updateScheduleFields(); // Call on load to set initial state
 
+      // Add event listener for changes
       scheduleCheckbox.addEventListener('change', updateScheduleFields);
     });
   </script>
@@ -43,7 +47,7 @@
     <a href="${pageContext.request.contextPath}/account-create">Create Account</a>
     <a href="${pageContext.request.contextPath}/profile-edit">Edit Profile</a>
     <a href="${pageContext.request.contextPath}/transfer">Transfer Funds</a>
-    <a href="${pageContext.request.contextPath}/deposit-withdraw">Deposit/Withdraw</a>
+    <a href="${pageContext.request.contextPath}/deposit-withdrawal">Deposit/Withdraw</a>
     <a href="${pageContext.request.contextPath}/logout?action=confirm">Logout</a>
   </div>
 </div>
@@ -78,6 +82,7 @@
     <div class="form-group">
       <label for="amount">Amount:</label>
       <input type="number" id="amount" name="amount" step="0.01" min="0.01" class="form-control" value="${param.amount}" required>
+      <p class="form-text text-muted">Amount must be positive (minimum = $0.01)</p>
     </div>
 
     <div class="form-group form-check">
@@ -99,12 +104,14 @@
       </div>
     </div>
 
-    <div class="form-group">
-      <button type="submit" class="btn btn-primary" <c:if test="${empty accounts}">disabled</c:if>>Process Transfer</button>
+    <div class="form-group text-center"> <!-- New form-group for the button -->
+      <button type="submit" class="btn btn-primary form-button-fixed-width mb-3" <c:if test="${empty accounts}">disabled</c:if>>Process Transfer</button>
+    </div>
+
+    <div class="form-group text-center"> <!-- New form-group for the back link -->
+      <a href="${pageContext.request.contextPath}/dashboard" class="btn btn-secondary form-button-fixed-width">Back to Dashboard</a>
     </div>
   </form>
-
-  <p class="text-center"><a href="${pageContext.request.contextPath}/dashboard" class="btn btn-secondary">Back to Dashboard</a></p>
 </div>
 </body>
 </html>

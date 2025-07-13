@@ -1,74 +1,46 @@
-<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%-- Main dashboard for authenticated users --%>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
-<!DOCTYPE html>
-<html>
-<head>
-  <title>User Dashboard</title>
-  <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/style.css">
-</head>
-<body>
-<div class="header">
-  <h1>Welcome, ${loggedInUser.username}!</h1>
-  <div class="nav-links">
-    <a href="${pageContext.request.contextPath}/dashboard">Dashboard</a>
-    <c:if test="${loggedInUser.hasRole('CUSTOMER')}">
-      <a href="${pageContext.request.contextPath}/account-create">Create Account</a>
-      <a href="${pageContext.request.contextPath}/profile-edit">Edit Profile</a>
-      <a href="${pageContext.request.contextPath}/transfer">Transfer Funds</a>
-      <a href="${pageContext.request.contextPath}/deposit-withdraw">Deposit/Withdraw</a>
-      <a href="${pageContext.request.contextPath}/scheduled-transfers">Scheduled Transfers</a>
-    </c:if>
-    <a href="${pageContext.request.contextPath}/change-password">Change Password</a> <!-- NEW LINK -->
-    <c:if test="${loggedInUser.hasRole('ADMIN') || loggedInUser.hasRole('EMPLOYEE')}">
-      <a href="${pageContext.request.contextPath}/users/manage">Manage Users</a>
-      <a href="${pageContext.request.contextPath}/customers/manage">Manage Customers</a>
-    </c:if>
-    <a href="${pageContext.request.contextPath}/logout?action=confirm">Logout</a>
-  </div>
-</div>
+<%@ include file="/WEB-INF/jspf/_header.jspf" %>
+<%-- Set page title for _header.jspf --%>
+<c:set var="pageTitle" value="Dashboard" scope="request"/>
 
-<div class="content-container">
-  <c:if test="${not empty flashMessage}">
-    <p class="flash-message ${flashMessageType}">${flashMessage}</p>
-  </c:if>
-  <c:if test="${not empty errorMessage}">
-    <p class="flash-message error">${errorMessage}</p>
-  </c:if>
-
+<div class="info-card">
   <c:if test="${loggedInUser.hasRole('CUSTOMER')}">
     <c:if test="${not empty customer}">
       <h2>Hello, ${customer.name}!</h2>
-      <p>Email: ${customer.email}</p>
-      <p>Address: ${customer.address}</p>
-      <p>Phone: ${customer.phoneNumber}</p>
+      <p><strong>Email:</strong> ${customer.email}</p>
+      <p><strong>Address:</strong> ${customer.address}</p>
+      <p><strong>Phone:</strong> ${customer.phoneNumber}</p>
     </c:if>
     <c:if test="${empty customer && not empty errorMessage}">
-      <p>Please complete your customer profile setup, or contact support if you believe this is an error.</p>
+      <p class="flash-message error">Your customer profile could not be loaded. Please complete your customer profile setup, or contact support if you believe this is an error.</p>
     </c:if>
 
-    <h2>Your Accounts</h2>
+    <h3 class="mt-4">Your Accounts</h3>
     <c:choose>
       <c:when test="${not empty accounts}">
-        <div class="account-list">
+        <div class="account-cards-grid">
           <c:forEach var="account" items="${accounts}">
             <div class="account-card">
               <h3>Account: ${account.accountNumber}</h3>
-              <p>Type: ${account.type}</p>
-              <p>Balance: <fmt:formatNumber value="${account.balance}" type="currency" currencyCode="USD"/></p>
-              <p><a href="${pageContext.request.contextPath}/transactions/account/${account.id}">View Transactions</a></p>
+              <p><strong>Type:</strong> ${account.type}</p>
+              <p><strong>Balance:</strong> <fmt:formatNumber value="${account.balance}" type="currency" currencyCode="USD"/></p>
+              <p class="text-right mt-3">
+                <a href="${pageContext.request.contextPath}/transactions/account/${account.id}" class="btn btn-sm btn-outline-primary">View Transactions</a>
+              </p>
             </div>
           </c:forEach>
         </div>
       </c:when>
       <c:otherwise>
-        <p>No accounts found for your customer profile. <a href="${pageContext.request.contextPath}/account-create">Create your first account!</a></p>
+        <p class="text-muted text-center mt-4">You have no accounts. <a href="${pageContext.request.contextPath}/account-create" class="btn btn-primary btn-sm my-2">Create your first account!</a></p>
       </c:otherwise>
     </c:choose>
 
-    <h2>Recent Transactions</h2>
+    <h3 class="mt-4">Recent Transactions</h3>
     <c:choose>
       <c:when test="${not empty recentTransactions}">
-        <table class="transaction-table">
+        <table class="data-table">
           <thead>
           <tr>
             <th>Timestamp</th>
@@ -85,7 +57,7 @@
               <td>${tx.formattedTimestamp}</td>
               <td>${tx.accountNumber}</td>
               <td>${tx.type}</td>
-              <td style="color: <c:if test='${tx.amount < 0}'>red</c:if><c:if test='${tx.amount > 0}'>green</c:if>;">
+              <td class="<c:if test='${tx.amount < 0}'>text-red</c:if><c:if test='${tx.amount > 0}'>text-green</c:if>">
                 <fmt:formatNumber value="${tx.amount}" type="currency" currencyCode="USD"/>
               </td>
               <td>${tx.status}</td>
@@ -96,16 +68,22 @@
         </table>
       </c:when>
       <c:otherwise>
-        <p>No recent transactions to display.</p>
+        <p class="text-muted text-center mt-4">No recent transactions to display.</p>
       </c:otherwise>
     </c:choose>
   </c:if>
 
   <c:if test="${loggedInUser.hasRole('ADMIN') || loggedInUser.hasRole('EMPLOYEE')}">
-    <p>${message}</p>
-    <h3>Admin/Employee Dashboard Features Coming Soon!</h3>
+    <h2 class="mt-4">Admin/Employee Dashboard</h2>
+    <p class="lead">${message}</p>
+    <p class="text-muted">More administrative features will be available here soon.</p>
+    <%-- Example Admin Links --%>
+    <div class="btn-group my-4">
+      <a href="${pageContext.request.contextPath}/users/manage" class="btn btn-info">Manage Users</a>
+      <a href="${pageContext.request.contextPath}/customers/manage" class="btn btn-info">Manage Customers</a>
+    </div>
   </c:if>
 
 </div>
-</body>
-</html>
+
+<%@ include file="/WEB-INF/jspf/_footer.jspf" %>

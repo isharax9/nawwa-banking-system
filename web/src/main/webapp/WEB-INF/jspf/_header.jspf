@@ -1,0 +1,48 @@
+<%-- This fragment includes the common HTML head and the main navigation header --%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${pageTitle} Nawwa Banking System</title> <%-- Page specific title can be set in request attribute --%>
+    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/style.css">
+    <%-- Add Font Awesome if you want icons (ensure jar is in WEB-INF/lib) --%>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+<div class="header">
+    <h1>Nawwa Banking</h1>
+    <div class="nav-links">
+        <c:if test="${loggedInUser != null}">
+            <a href="${pageContext.request.contextPath}/dashboard">Dashboard</a>
+            <c:if test="${loggedInUser.hasRole('CUSTOMER')}">
+                <a href="${pageContext.request.contextPath}/account-create">Create Account</a>
+                <a href="${pageContext.request.contextPath}/profile-edit">Edit Profile</a>
+                <a href="${pageContext.request.contextPath}/transfer">Transfer Funds</a>
+                <a href="${pageContext.request.contextPath}/deposit-withdraw">Deposit/Withdraw</a>
+                <a href="${pageContext.request.contextPath}/scheduled-transfers">Scheduled Transfers</a>
+            </c:if>
+            <c:if test="${loggedInUser.hasRole('ADMIN') || loggedInUser.hasRole('EMPLOYEE')}">
+                <a href="${pageContext.request.contextPath}/users/manage">Manage Users</a>
+                <a href="${pageContext.request.contextPath}/customers/manage">Manage Customers</a>
+                <%-- More admin links here --%>
+            </c:if>
+            <a href="${pageContext.request.contextPath}/change-password">Change Password</a>
+            <a href="${pageContext.request.contextPath}/logout?action=confirm">Logout</a>
+        </c:if>
+        <c:if test="${loggedInUser == null}">
+            <a href="${pageContext.request.contextPath}/login" class="btn btn-outline-primary">Login</a>
+            <a href="${pageContext.request.contextPath}/register" class="btn btn-primary">Register</a>
+        </c:if>
+    </div>
+</div>
+<div class="content-wrapper">
+<main class="main-content-area">
+<%-- Flash messages container --%>
+<c:if test="${not empty flashMessage}">
+    <p class="flash-message ${flashMessageType}">${flashMessage}</p>
+</c:if>
+<c:if test="${not empty errorMessage}">
+    <p class="flash-message error">${errorMessage}</p>
+</c:if>
