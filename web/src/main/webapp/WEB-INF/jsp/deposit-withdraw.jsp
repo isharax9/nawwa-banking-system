@@ -45,7 +45,7 @@
       <input type="text" id="description" name="description" class="form-control" value="${param.description}">
     </div>
 
-    <div class="form-group">
+    <div class="form-group text-center">
       <button type="submit" class="btn btn-primary w-100" <c:if test="${empty accounts}">disabled</c:if>>Process Transaction</button>
     </div>
   </form>

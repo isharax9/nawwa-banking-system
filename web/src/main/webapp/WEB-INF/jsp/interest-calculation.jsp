@@ -17,10 +17,6 @@
     <h2>Accrued Interest Calculator</h2>
     <p class="text-muted">Select a savings account to view and apply accrued interest.</p>
 
-    <c:if test="${not empty errorMessage}">
-        <p class="flash-message error">${errorMessage}</p>
-    </c:if>
-
     <form action="${pageContext.request.contextPath}/interest-calculation" method="get" class="banking-form">
         <div class="form-group">
             <label for="accountId">Select Savings Account:</label>

@@ -8,10 +8,6 @@
 <div class="banking-form-container"> <%-- This container is what we want inside main content area --%>
   <h2>Transfer Funds</h2>
 
-  <c:if test="${not empty errorMessage}">
-    <p class="flash-message error">${errorMessage}</p>
-  </c:if>
-
   <form action="${pageContext.request.contextPath}/transfer" method="post" class="banking-form">
     <div class="form-group">
       <label for="fromAccountId">From Account:</label>

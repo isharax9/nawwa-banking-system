@@ -20,7 +20,7 @@
       <label for="confirmNewPassword">Confirm New Password:</label>
       <input type="password" id="confirmNewPassword" name="confirmNewPassword" class="form-control" required>
     </div>
-    <div class="form-group">
+    <div class="form-group text-center">
       <button type="submit" class="btn btn-primary w-100">Change Password</button>
     </div>
   </form>
