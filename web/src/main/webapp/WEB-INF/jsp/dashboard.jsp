@@ -1,3 +1,4 @@
+<%-- Main dashboard for authenticated users --%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ include file="/WEB-INF/jspf/_header.jspf" %>
@@ -5,6 +6,16 @@
 <c:set var="pageTitle" value="Dashboard" scope="request"/>
 
 <div class="info-card">
+  <c:if test="${loggedInUser.hasRole('ADMIN') || loggedInUser.hasRole('EMPLOYEE')}">
+    <h2 class="mt-4">Admin/Employee Dashboard</h2>
+    <p class="lead">${message}</p>
+    <p class="text-muted">You have elevated privileges. Use the links below to manage the system.</p>
+    <div class="btn-group my-4">
+      <a href="${pageContext.request.contextPath}/users/manage" class="btn btn-info">Manage Users</a>
+      <a href="${pageContext.request.contextPath}/customers/manage" class="btn btn-info">Manage Customers</a>
+      <a href="${pageContext.request.contextPath}/accounts/manage" class="btn btn-info">Manage Bank Accounts</a>
+    </div>
+  </c:if>
   <c:if test="${loggedInUser.hasRole('CUSTOMER')}">
     <c:if test="${not empty customer}">
       <h2>Hello, ${customer.name}!</h2>
@@ -25,7 +36,13 @@
               <h3>Account: ${account.accountNumber}</h3>
               <p><strong>Type:</strong> ${account.type}</p>
               <p><strong>Balance:</strong> <fmt:formatNumber value="${account.balance}" type="currency" currencyCode="USD"/></p>
-              <p><strong>Customer:</strong> ${account.customerName}</p>
+                <%-- REMOVED: <p><strong>Customer:</strong> ${account.customerName}</p> --%>
+              <p><strong>Status:</strong>
+                <c:choose>
+                  <c:when test="${account.isActive == true}"><span class="text-green">Active</span></c:when>
+                  <c:otherwise><span class="text-red">Inactive</span></c:otherwise>
+                </c:choose>
+              </p>
               <p class="text-right mt-3">
                 <a href="${pageContext.request.contextPath}/transactions/account/${account.id}" class="btn btn-sm btn-outline-primary">View Transactions</a>
               </p>
@@ -76,16 +93,7 @@
     </c:choose>
   </c:if>
 
-  <c:if test="${loggedInUser.hasRole('ADMIN') || loggedInUser.hasRole('EMPLOYEE')}">
-    <h2 class="mt-4">Admin/Employee Dashboard</h2>
-    <p class="lead">${message}</p>
-    <p class="text-muted">You have elevated privileges. Use the links below to manage the system.</p>
-    <div class="btn-group my-4">
-      <a href="${pageContext.request.contextPath}/users/manage" class="btn btn-info">Manage Users</a>
-      <a href="${pageContext.request.contextPath}/customers/manage" class="btn btn-info">Manage Customers</a>
-      <a href="${pageContext.request.contextPath}/accounts/manage" class="btn btn-info">Manage Bank Accounts</a>
-    </div>
-  </c:if>
+
 
 </div>
 

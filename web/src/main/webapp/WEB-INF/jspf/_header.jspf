@@ -25,11 +25,6 @@
                 <a href="${pageContext.request.contextPath}/interest-calculation">Interest Calculator</a>
 
             </c:if>
-            <c:if test="${loggedInUser.hasRole('ADMIN') || loggedInUser.hasRole('EMPLOYEE')}">
-                <a href="${pageContext.request.contextPath}/users/manage">Manage Users</a>
-                <a href="${pageContext.request.contextPath}/accounts/manage">Manage Accounts</a>
-                <%-- More admin links here --%>
-            </c:if>
             <a href="${pageContext.request.contextPath}/change-password">Change Password</a>
             <a href="${pageContext.request.contextPath}/logout?action=confirm">Logout</a>
         </c:if>

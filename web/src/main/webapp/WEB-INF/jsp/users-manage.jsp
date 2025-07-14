@@ -46,7 +46,7 @@
             <td>
               <div class="action-buttons-group"> <%-- New div for button alignment --%>
                   <%-- Edit button (placeholder) --%>
-                <a href="#" class="btn btn-sm btn-outline-primary action-btn">Edit</a>
+
 
                   <%-- Deactivate/Activate form buttons --%>
                 <c:if test="${user.id != loggedInUser.id}"> <%-- Prevent self-deactivation --%>
