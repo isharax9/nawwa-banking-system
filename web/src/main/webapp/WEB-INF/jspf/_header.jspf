@@ -28,10 +28,6 @@
             <a href="${pageContext.request.contextPath}/change-password">Change Password</a>
             <a href="${pageContext.request.contextPath}/logout?action=confirm">Logout</a>
         </c:if>
-        <c:if test="${loggedInUser == null}">
-            <a href="${pageContext.request.contextPath}/login" class="btn btn-outline-primary">Login</a>
-            <a href="${pageContext.request.contextPath}/register" class="btn btn-primary">Register</a>
-        </c:if>
     </div>
 </div>
 <div class="content-wrapper">
