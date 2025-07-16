@@ -29,9 +29,16 @@ public class PaymentProcessingServiceImpl implements PaymentProcessingService {
     @Override
     @Transactional
     public Transaction processPayment(TransactionDto transactionDto) {
+        // IMPORTANT FIX: Move null check for transactionDto to the very beginning
+        if (transactionDto == null) { // Check the DTO itself first
+            throw new InvalidTransactionException("Transaction data (account ID, amount, type) cannot be null.");
+        }
+
+        // Now it's safe to access properties of transactionDto for logging or further checks
         LOGGER.info("PaymentProcessingService: Processing payment for account ID: " + transactionDto.getAccountId() + " type: " + transactionDto.getType() + " amount: " + transactionDto.getAmount());
 
-        if (transactionDto == null || transactionDto.getAccountId() == null || transactionDto.getAmount() == null || transactionDto.getType() == null) {
+        // Perform other null checks for DTO properties
+        if (transactionDto.getAccountId() == null || transactionDto.getAmount() == null || transactionDto.getType() == null) {
             throw new InvalidTransactionException("Transaction data (account ID, amount, type) cannot be null.");
         }
 
@@ -46,7 +53,7 @@ public class PaymentProcessingServiceImpl implements PaymentProcessingService {
             throw new AccountNotFoundException("Account with ID " + transactionDto.getAccountId() + " not found.");
         }
 
-        // **** CRUCIAL CHANGE: Check if account is active ****
+        // Check if account is active
         if (!account.getIsActive()) {
             LOGGER.warning("PaymentProcessingService: Transaction denied for inactive account: " + account.getAccountNumber() + " Type: " + transactionDto.getType().name());
             throw new InvalidTransactionException("Transaction denied: Account " + account.getAccountNumber() + " is inactive.");
