@@ -59,6 +59,19 @@ public class Transaction implements Serializable {
     }
 
     // ---- Getters and Setters ----
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Boolean getArchived() {
+        return isArchived;
+    }
+
+    public void setArchived(Boolean archived) {
+        isArchived = archived;
+    }
+
     public Boolean getIsArchived() { return isArchived; }
     public void setIsArchived(Boolean isArchived) { this.isArchived = isArchived; }
     public Long getId() { return id; }
