@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lk.banking.core.entity.enums.UserRole;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
@@ -43,6 +44,19 @@ public class Role implements Serializable {
     }
 
     // Getters and setters
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
     public Long getId() { return id; }
     public UserRole getName() { return name; }
     public void setName(UserRole name) { this.name = name; }
