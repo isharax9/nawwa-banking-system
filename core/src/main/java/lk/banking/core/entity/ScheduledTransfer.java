@@ -65,6 +65,18 @@ public class ScheduledTransfer implements Serializable {
         updatedAt = LocalDateTime.now();
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
     // ---- Getters and Setters ----
     public Long getId() { return id; }
     public Account getFromAccount() { return fromAccount; }

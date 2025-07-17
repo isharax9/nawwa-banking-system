@@ -21,6 +21,9 @@ public class CustomerDto {
         this.phoneNumber = phoneNumber;
     }
 
+    public CustomerDto(String janeDoe, String mail, String s, String number) {
+    }
+
     // Getters and setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

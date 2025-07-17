@@ -29,11 +29,13 @@ public class FundTransferServiceImpl implements FundTransferService {
     @Override
     @Transactional
     public Transaction transferFunds(TransferRequestDto requestDto) {
-        LOGGER.info("FundTransferService: Processing transfer from account ID: " + requestDto.getFromAccountId() + " to ID: " + requestDto.getToAccountId() + " amount: " + requestDto.getAmount());
-
+        // IMPORTANT FIX: Move null check to the very beginning, before any access to requestDto
         if (requestDto == null || requestDto.getAmount() == null) {
             throw new InvalidTransactionException("Transfer request or amount cannot be null.");
         }
+
+        // Now it's safe to log details from requestDto
+        LOGGER.info("FundTransferService: Processing transfer from account ID: " + requestDto.getFromAccountId() + " to ID: " + requestDto.getToAccountId() + " amount: " + requestDto.getAmount());
 
         BigDecimal amount = requestDto.getAmount();
 
@@ -57,7 +59,7 @@ public class FundTransferServiceImpl implements FundTransferService {
             throw new AccountNotFoundException("Destination account with ID " + requestDto.getToAccountId() + " not found.");
         }
 
-        // **** CRUCIAL CHANGE: Check if accounts are active ****
+        // Check if accounts are active
         if (!fromAccount.getIsActive()) {
             LOGGER.warning("FundTransferService: Transfer denied from inactive source account: " + fromAccount.getAccountNumber());
             throw new InvalidTransactionException("Transfer denied: Source account " + fromAccount.getAccountNumber() + " is inactive.");

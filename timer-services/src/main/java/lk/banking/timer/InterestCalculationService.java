@@ -29,12 +29,15 @@ public class InterestCalculationService {
     @PersistenceContext(unitName = "bankingPU")
     private EntityManager em;
 
-    private static final MathContext MATH_CONTEXT = new MathContext(10, RoundingMode.HALF_UP);
-    private static final BigDecimal DAILY_INTEREST_RATE = BigDecimal.valueOf(0.00002); // Adjusted for more realistic daily rate (0.002% daily means ~0.73% annually)
-    // You can adjust this to a more realistic value. A 0.2% daily rate as before is ~73% annually.
+    // Use a MathContext that implies a desired scale for final results, or apply setScale explicitly.
+    // For currency, it's typical to use a precision that allows for calculations
+    // then round to the currency's scale at the end.
+    private static final MathContext CALCULATION_MATH_CONTEXT = new MathContext(20, RoundingMode.HALF_UP); // High precision for intermediate steps
+    private static final int CURRENCY_SCALE = 2; // For currency, e.g., cents
+    private static final BigDecimal DAILY_INTEREST_RATE = BigDecimal.valueOf(0.01); // Example: 1% daily interest rate
 
     /**
-     * Runs daily at 2am to calculate and apply interest to savings accounts.
+     * Runs daily at 2am to calculate and apply interest to saving accounts.
      */
     @Schedule(hour = "2", minute = "0", second = "0", persistent = false)
     @Transactional // Ensures atomicity for balance updates
@@ -61,44 +64,55 @@ public class InterestCalculationService {
                 continue;
             }
 
-            // Calculate daily interest for the last full day since last application
             LocalDateTime lastApplied = account.getLastInterestAppliedDate();
             if (lastApplied == null) {
-                // If never applied, assume it's new and apply from creation date or current date
                 lastApplied = account.getCreatedAt();
-                if (lastApplied.isAfter(LocalDateTime.now().minusDays(1))) { // If created less than a day ago
-                    LOGGER.fine("Account " + account.getAccountNumber() + " created recently. Skipping automated interest calculation for now.");
-                    // Skip if too new for a full day's interest.
+                // If created less than a full day ago based on today's date, skip.
+                if (ChronoUnit.DAYS.between(lastApplied.toLocalDate(), LocalDateTime.now().toLocalDate()) <= 0) {
+                    LOGGER.fine("Account " + account.getAccountNumber() + " created very recently (no full days passed). Skipping automated interest calculation for now.");
+                    continue;
+                }
+            } else {
+                // If the last applied date is today, no full day has passed since then.
+                if (lastApplied.toLocalDate().isEqual(LocalDateTime.now().toLocalDate())) {
+                    LOGGER.fine("Account " + account.getAccountNumber() + ": Interest already applied today. Skipping.");
                     continue;
                 }
             }
 
+
             // Number of days since last interest application (or start of period)
             long days = ChronoUnit.DAYS.between(lastApplied.toLocalDate(), LocalDateTime.now().toLocalDate());
 
-            if (days <= 0) {
+            if (days <= 0) { // This check becomes redundant with the above, but harmless.
                 LOGGER.fine("Account " + account.getAccountNumber() + ": No full days passed since last automated interest application. Skipping.");
-                continue; // Only apply for full days that have passed
+                continue;
             }
 
             // Interest calculation (compounded daily based on this logic)
             BigDecimal interest = BigDecimal.ZERO;
             BigDecimal tempBalance = currentBalance;
             for (int i = 0; i < days; i++) {
-                BigDecimal dailyInterest = tempBalance.multiply(DAILY_INTEREST_RATE, MATH_CONTEXT);
+                // Perform daily interest calculation with high precision
+                BigDecimal dailyInterest = tempBalance.multiply(DAILY_INTEREST_RATE, CALCULATION_MATH_CONTEXT);
                 interest = interest.add(dailyInterest);
                 tempBalance = tempBalance.add(dailyInterest); // Compound daily if that's the rule
             }
 
+            // IMPORTANT: Round the final calculated interest and the new balance to currency scale
+            interest = interest.setScale(CURRENCY_SCALE, RoundingMode.HALF_UP);
+            BigDecimal newBalance = currentBalance.add(interest).setScale(CURRENCY_SCALE, RoundingMode.HALF_UP);
+
+
             // Add interest to the balance
-            account.setBalance(currentBalance.add(interest));
+            account.setBalance(newBalance); // Set the rounded new balance
             account.setLastInterestAppliedDate(LocalDateTime.now()); // Update last applied date
 
             // Create a transaction record for the interest application for audit purposes
             Transaction interestTransaction = new Transaction(
                     account,
-                    interest,
-                    TransactionType.DEPOSIT, // Or a specific INTEREST_EARNED type if you add it
+                    interest, // Use the rounded interest amount for the transaction record
+                    TransactionType.DEPOSIT,
                     TransactionStatus.COMPLETED,
                     LocalDateTime.now(),
                     "Automated daily interest applied for " + days + " days"
