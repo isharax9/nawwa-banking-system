@@ -34,12 +34,12 @@ public class InterestCalculationService {
     // then round to the currency's scale at the end.
     private static final MathContext CALCULATION_MATH_CONTEXT = new MathContext(20, RoundingMode.HALF_UP); // High precision for intermediate steps
     private static final int CURRENCY_SCALE = 2; // For currency, e.g., cents
-    private static final BigDecimal DAILY_INTEREST_RATE = BigDecimal.valueOf(0.01); // Example: 1% daily interest rate
+    private static final BigDecimal DAILY_INTEREST_RATE = BigDecimal.valueOf(0.1); // Example: 10% daily interest rate
 
     /**
-     * Runs daily at 2am to calculate and apply interest to saving accounts.
+     * Runs daily at 1am to calculate and apply interest to saving accounts.
      */
-    @Schedule(hour = "2", minute = "0", second = "0", persistent = false)
+    @Schedule(hour = "1", minute = "0", second = "0", persistent = false)
     @Transactional // Ensures atomicity for balance updates
     public void calculateInterest() {
         LOGGER.info("Running daily automated interest calculation...");
