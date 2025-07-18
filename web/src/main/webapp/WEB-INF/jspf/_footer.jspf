@@ -25,13 +25,12 @@
             &copy; 2025 <strong>Ishara Lakshitha (@isharax9)</strong>. All rights reserved.
         </p>
         <p style="margin: 0; font-size: 14px; color: #bbbbbb;">
-            Business Component Development 2 - Final Year Project | Enterprise Java Technologies
+            Business Component Development 2 - Final Year Assignment Project | Enterprise Java Technologies
         </p>
     </div>
 </footer>
 
 <!-- Load Font Awesome CDN for social media icons -->
-<script src="https://kit.fontawesome.com/a0b8b7c62f.js " crossorigin="anonymous"></script>
 
 </body>
 </html>
