@@ -36,7 +36,6 @@
               <h3>Account: ${account.accountNumber}</h3>
               <p><strong>Type:</strong> ${account.type}</p>
               <p><strong>Balance:</strong> <fmt:formatNumber value="${account.balance}" type="currency" currencyCode="USD"/></p>
-                <%-- REMOVED: <p><strong>Customer:</strong> ${account.customerName}</p> --%>
               <p><strong>Status:</strong>
                 <c:choose>
                   <c:when test="${account.isActive == true}"><span class="text-green">Active</span></c:when>
@@ -55,45 +54,27 @@
       </c:otherwise>
     </c:choose>
 
-    <h2>Recent Transactions</h2>
+    <%-- MODIFIED: Recent Transactions section now handles the download button and includes the fragment --%>
     <c:choose>
       <c:when test="${not empty recentTransactions}">
+        <h2 style="display: flex; justify-content: space-between; align-items: center;" class="mt-4">
+          Recent Transactions
+          <a href="${pageContext.request.contextPath}/pdf/transactions" class="btn btn-sm btn-outline-danger">
+            <i class="fas fa-file-pdf"></i> Download as PDF
+          </a>
+        </h2>
         <div class="data-table-container">
-          <table class="data-table">
-            <thead>
-            <tr>
-              <th>Timestamp</th>
-              <th>Account</th>
-              <th>Type</th>
-              <th>Amount</th>
-              <th>Status</th>
-              <th>Description</th>
-            </tr>
-            </thead>
-            <tbody>
-            <c:forEach var="tx" items="${recentTransactions}">
-              <tr>
-                <td>${tx.formattedTimestamp}</td>
-                <td>${tx.accountNumber}</td>
-                <td>${tx.type}</td>
-                <td class="<c:if test='${tx.amount < 0}'>text-red</c:if><c:if test='${tx.amount > 0}'>text-green</c:if>">
-                  <fmt:formatNumber value="${tx.amount}" type="currency" currencyCode="USD"/>
-                </td>
-                <td>${tx.status}</td>
-                <td>${tx.description}</td>
-              </tr>
-            </c:forEach>
-            </tbody>
-          </table>
+            <%-- Set the variable name for the fragment and then include it --%>
+          <c:set var="transactionsForPdf" value="${recentTransactions}" scope="request"/>
+          <%@ include file="/WEB-INF/jspf/_transactionTable.jspf" %>
         </div>
       </c:when>
       <c:otherwise>
+        <h2 class="mt-4">Recent Transactions</h2>
         <p class="text-muted text-center mt-4">No recent transactions to display.</p>
       </c:otherwise>
     </c:choose>
   </c:if>
-
-
 
 </div>
 

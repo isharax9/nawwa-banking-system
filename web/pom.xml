@@ -15,6 +15,13 @@
 
     <dependencies>
 
+        <!-- ADD THIS DEPENDENCY FOR HTML-TO-PDF CONVERSION -->
+        <dependency>
+            <groupId>org.xhtmlrenderer</groupId>
+            <artifactId>flying-saucer-pdf-openpdf</artifactId>
+            <version>9.1.22</version> <!-- A stable version that works well -->
+        </dependency>
+
         <dependency>
             <groupId>jakarta.ws.rs</groupId>
             <artifactId>jakarta.ws.rs-api</artifactId>

@@ -20,4 +20,7 @@ public interface TransactionServices {
     List<Transaction> getTransactionsByAccountAndDateRange(Long accountId, LocalDateTime from, LocalDateTime to, boolean includeArchived);
 
     List<Transaction> getTransactionsByUser(Long userId);
+
+    // ADD THIS NEW METHOD
+    List<Transaction> getTransactionsByUser(Long userId, int maxResults);
 }
