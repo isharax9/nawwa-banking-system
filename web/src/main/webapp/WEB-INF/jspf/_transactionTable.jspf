@@ -1,0 +1,30 @@
+<%-- This fragment contains ONLY the HTML for the transaction table structure --%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+
+<table class="data-table">
+    <thead>
+    <tr>
+        <th>Timestamp</th>
+        <th>Account</th>
+        <th>Type</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <c:forEach var="tx" items="${transactionsForPdf}">
+        <tr>
+            <td>${tx.formattedTimestamp}</td>
+            <td>${tx.accountNumber}</td>
+            <td>${tx.type}</td>
+            <td class="<c:if test='${tx.amount < 0}'>text-red</c:if><c:if test='${tx.amount > 0}'>text-green</c:if>">
+                <fmt:formatNumber value="${tx.amount}" type="currency" currencyCode="USD"/>
+            </td>
+            <td>${tx.status}</td>
+            <td>${tx.description}</td>
+        </tr>
+    </c:forEach>
+    </tbody>
+</table>
