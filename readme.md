@@ -167,14 +167,14 @@ graph LR
     E --> H
     F --> H
 
-    style A fill:#FFE5B4
-    style B fill:#B4D7FF
-    style C fill:#B4D7FF
-    style D fill:#B4D7FF
-    style E fill:#B4D7FF
-    style F fill:#B4D7FF
-    style G fill:#B4FFB4
-    style H fill:#FFB4B4
+    style A fill:#4169E1
+    style B fill:#FF8C00
+    style C fill:#228B22
+    style D fill:#9932CC
+    style E fill:#6495ED
+    style F fill:#6495ED
+    style G fill:#6495ED
+    style H fill:#FFD700
 ```
 
 ---
