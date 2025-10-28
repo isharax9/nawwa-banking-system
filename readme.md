@@ -120,18 +120,18 @@ graph TB
     H -.->|Scheduled Tasks| G
     H -.->|Interest Calculation| F
 
-    style A fill:#e1f5ff
-    style B fill:#fff4e1
-    style C fill:#ffe1e1
-    style D fill:#e1ffe1
-    style E fill:#f0e1ff
-    style F fill:#f0e1ff
-    style G fill:#f0e1ff
-    style H fill:#f0e1ff
-    style I fill:#f0e1ff
-    style J fill:#ffe1f5
-    style K fill:#e1f5ff
-    style L fill:#e1f5ff
+    style A fill:#4169E1
+    style B fill:#FF8C00
+    style C fill:#228B22
+    style D fill:#9932CC
+    style E fill:#6495ED
+    style F fill:#6495ED
+    style G fill:#6495ED
+    style H fill:#FFD700
+    style I fill:#2E8B57
+    style J fill:#A0522D
+    style K fill:#DAA520
+    style L fill:#FF6347
 ```
 
 ### 📦 Module Structure
@@ -654,12 +654,12 @@ graph TD
     I -->|Failed| J[Rollback]
     I -->|Success| K[Commit]
     
-    style B fill:#ff6b6b
-    style D fill:#4ecdc4
-    style E fill:#45b7d1
-    style G fill:#96ceb4
-    style H fill:#ffeaa7
-    style I fill:#dfe6e9
+    style B fill:#B22222
+    style D fill:#000080
+    style E fill:#008000
+    style G fill:#FFD700
+    style H fill:#8A2BE2
+    style I fill:#696969
 ```
 
 ### Security Features
