@@ -225,6 +225,23 @@ graph LR
 
 ## 🚀 Getting Started
 
+### Quick local start with Docker
+
+The repository includes a MySQL 8 schema and a GlassFish 7 image configured with
+the `macna_jdbc_v2` JTA datasource expected by `persistence.xml`.
+
+```bash
+docker compose up --build -d
+```
+
+After both containers are healthy, open
+`http://localhost:8080/banking-system/`. The seeded development administrator is
+`mac` / `password123A!`.
+
+To stop the application, run `docker compose down`. To also delete the local
+database and recreate the schema on the next start, run
+`docker compose down -v`.
+
 ### Prerequisites
 
 Before you begin, ensure you have the following installed:
