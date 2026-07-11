@@ -19,6 +19,9 @@ DOMAIN_STARTED=true
 $ASADMIN set "server-config.network-config.network-listeners.network-listener.http-listener-1.port=$PORT"
 
 if [ -n "${JAWSDB_URL:-}" ]; then
+    $ASADMIN delete-jvm-options --target server-config "-Xmx512m"
+    $ASADMIN create-jvm-options --target server-config "-Xmx384m"
+
     database_url="${JAWSDB_URL#*://}"
     credentials="${database_url%%@*}"
     host_and_path="${database_url#*@}"
@@ -43,6 +46,10 @@ if [ -n "${JAWSDB_URL:-}" ]; then
             --host="$DB_HOST" --port="$DB_PORT" --user="$DB_USER" "$DB_NAME"
     unset MYSQL_PWD
 fi
+
+# Deploy explicitly after the database is ready. Relying on GlassFish autodeploy
+# here races with the configuration restart and can leave a false deploy failure.
+$ASADMIN deploy --force=true /opt/macna/banking-system-ear.ear
 
 asadmin stop-domain
 DOMAIN_STARTED=false

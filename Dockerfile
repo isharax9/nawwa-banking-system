@@ -13,7 +13,12 @@ COPY web/pom.xml web/pom.xml
 COPY ear/pom.xml ear/pom.xml
 RUN mvn --batch-mode --no-transfer-progress -DskipTests dependency:go-offline
 
-COPY . .
+COPY core/src core/src
+COPY banking-services/src banking-services/src
+COPY transaction-services/src transaction-services/src
+COPY timer-services/src timer-services/src
+COPY security-module/src security-module/src
+COPY web/src web/src
 RUN mvn --batch-mode --no-transfer-progress -DskipTests package \
     && cp /root/.m2/repository/com/mysql/mysql-connector-j/8.0.33/mysql-connector-j-8.0.33.jar \
         /workspace/mysql-connector-j.jar
@@ -42,7 +47,7 @@ RUN asadmin start-domain \
 
 COPY --from=build --chown=glassfish:glassfish \
     /workspace/ear/target/banking-system-ear.ear \
-    /opt/glassfish7/glassfish/domains/domain1/autodeploy/banking-system-ear.ear
+    /opt/macna/banking-system-ear.ear
 
 COPY --chown=glassfish:glassfish database/schema.sql /opt/macna/schema.sql
 COPY --chown=glassfish:glassfish docker/heroku-entrypoint.sh /opt/macna/heroku-entrypoint.sh
