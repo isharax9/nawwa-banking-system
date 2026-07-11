@@ -242,6 +242,22 @@ To stop the application, run `docker compose down`. To also delete the local
 database and recreate the schema on the next start, run
 `docker compose down -v`.
 
+### Heroku CI/CD
+
+The GitHub Actions workflow in `.github/workflows/ci-cd.yml` runs the Java 17
+test suite for pull requests. Pushes to `main` additionally build the
+`linux/amd64` container with reusable BuildKit caching, publish it to Heroku,
+release it, and smoke-test the login page.
+
+Configure these GitHub Actions secrets before enabling production deployment:
+
+- `HEROKU_API_KEY`
+- `HEROKU_APP_NAME`
+
+The Heroku app requires a JawsDB attachment that exposes `JAWSDB_URL`. At boot,
+the container binds GlassFish to Heroku's dynamic `PORT`, configures the JTA
+pool from `JAWSDB_URL`, and applies the idempotent MySQL schema.
+
 ### Prerequisites
 
 Before you begin, ensure you have the following installed:
