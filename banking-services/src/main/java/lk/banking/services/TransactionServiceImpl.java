@@ -5,6 +5,7 @@ import jakarta.interceptor.Interceptors;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException; // For specific query results
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import lk.banking.core.dto.TransactionDto;
 import lk.banking.core.entity.Account;
 import lk.banking.core.entity.Customer; // Needed for getTransactionsByUser
@@ -182,11 +183,10 @@ public class TransactionServiceImpl implements TransactionServices {
             return List.of();
         }
 
-        // The query now includes setMaxResults to limit the number of transactions returned
-        return em.createQuery(
+        TypedQuery<Transaction> transactionQuery = em.createQuery(
                         "SELECT t FROM Transaction t JOIN FETCH t.account a WHERE t.account.id IN :accountIds ORDER BY t.timestamp DESC", Transaction.class)
-                .setParameter("accountIds", accounts.stream().map(Account::getId).collect(Collectors.toList()))
-                .setMaxResults(maxResults) // <-- This line limits the results
-                .getResultList();
+                .setParameter("accountIds", accounts.stream().map(Account::getId).collect(Collectors.toList()));
+        transactionQuery.setMaxResults(maxResults);
+        return transactionQuery.getResultList();
     }
 }
